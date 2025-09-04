@@ -1,69 +1,107 @@
 #ifndef GL_OBJECT_H
 #define GL_OBJECT_H
 
-#include <stdlib.h>
-#include <QOpenGLFunctions_3_3_Core>
-#include <QOpenGLVersionFunctionsFactory>
-#include <QDir>
-#include <QString>
-#include <vector>
-#include <QObject>
-#include <string>
-#include <glm/vec3.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <algorithm>
-#include "GLProgram.hpp"
-#include "../Logic/Triangle.hpp"
 #include "../Logic/CoRHandlers.hpp"
 #include "../Logic/Frames.hpp"
-
-
-
-
+#include "../Logic/Triangle.hpp"
+#include "GLProgram.hpp"
+#include <QDir>
+#include <QObject>
+#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLVersionFunctionsFactory>
+#include <QString>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/vec3.hpp>
+#include <stdlib.h>
+#include <string>
+#include <vector>
 
 class Scene;
 
-class GLInterface{
+class GLInterface {
 public:
+  virtual ~GLInterface() = default;
   virtual void init() = 0;
   virtual void draw() = 0;
 };
 
-class GLObject : public QObject, public GLInterface{
+class GLDrawable : public QObject, public GLInterface {
   Q_OBJECT
-  public:
-  GLObject(Scene * scene = 0,QOpenGLContext * context = 0);
-  GLObject(const GLObject & copyObj);
-  GLObject(GLObject && other) = delete;
-  // It should have an interface for draw and init but not for now
-  virtual ~GLObject();
+public:
+  GLDrawable(QOpenGLContext *context = 0);
+  GLDrawable(const GLDrawable &) = delete;
+  GLDrawable &operator=(const GLDrawable &) = delete;
+  ~GLDrawable();
+  virtual void draw() = 0;
+  virtual void init() = 0;
+
+protected:
+  std::vector<GLProgram> program;
+  std::string shader;
+  QOpenGLFunctions_3_3_Core *f;
+  QOpenGLContext *currentContext;
+  std::vector<uint> VBO;
+  std::vector<uint> VAO;
+  std::vector<uint> EBO;
+
+}
+
+// Simple mesh interface for primitives and simple objects.
+class GLSimpleMesh : public GLDrawable{
+public:
+  GLSimpleMesh(QOpenGLContext *context = 0);
+  GLSimpleMesh(const GLSimpleMesh &copyObj) = delete ;
+  GLSimpleMesh(GLSimpleMesh &&other) = delete;
+  ~GLSimpleMesh() = default;
+  virtual void draw();
+  virtual void init();
+
+  GLSimpleMesh &operator=(GLSimpleMesh &&other) = delete;
+  GLSimpleMesh &operator=(const GLSimpleMesh &copyObj) = delete;
+
+public:
+  std::vector<glm::vec3> points;
+  std::vector<uint32_t> indexes;
+
+}
+
+// Mesh interface for scene and complex algortihms
+class GLTriMesh : public GLDrawable {
+public:
+  GLTriMesh(Scene *scene = 0, QOpenGLContext *context = 0);
+  ~GLTriMesh();
+  GLTriMesh(const GLTriMesh &copyObj) = delete ;
+  GLTriMesh(GLTriMesh &&other) = delete;
+
   virtual void draw();
   virtual void init();
   virtual void restoreOriginal();
 
-  GLObject & operator=(GLObject&& other) = delete;
-  GLObject & operator=(const GLObject& copyObj);
+  GLTriMesh &operator=(GLTriMesh &&other) = delete;
+  GLTriMesh &operator=(const GLTriMesh &copyObj) = delete;
 
-  public:
-  void addNewVertex(glm::vec3 pos, glm::vec3 color,bool isActive);
+
+
+public:
+  void addNewVertex(glm::vec3 pos, glm::vec3 color, bool isActive);
 
   bool isPointInside(glm::vec3 p);
 
   void execHandlers();
 
-  std::vector<Vertex> * getLocalPoints();
+  std::vector<Vertex> *getLocalPoints();
 
-  std::vector<Triangle> * getTriangles();
+  std::vector<Triangle> *getTriangles();
 
-  std::vector<std::pair<uint,uint>> * getLines();
+  std::vector<std::pair<uint, uint>> *getLines();
 
-  std::vector<uint> * getLocalIndexes();
+  std::vector<uint> *getLocalIndexes();
 
   void addFrame(Frame f);
 
   std::vector<Frame> getFrames();
 
-  GLProgram & getProgram(uint idx);
+  GLProgram &getProgram(uint idx);
 
   bool nextFrame();
 
@@ -73,9 +111,9 @@ class GLObject : public QObject, public GLInterface{
 
   int getCurrentFrame();
 
-  Scene * getScene();
+  Scene *getScene();
 
-  AbsHandler * getBaseHandler();
+  AbsHandler *getBaseHandler();
 
   void setbaseHandler(AbsHandler *);
 
@@ -90,51 +128,37 @@ class GLObject : public QObject, public GLInterface{
   glm::vec3 getCenter();
 
   glm::vec3 maxValAxis();
-  
+
   glm::vec3 minValAxis();
 
-  //Vertex getGlobalVertexFromIndex(uint idx);
+  // Vertex getGlobalVertexFromIndex(uint idx);
 
   uint addVertexToScene(Vertex v);
-  public:
 
+public:
   int sourceFilePointsSize;
   int sourceFileLinesSize;
   int sourceFileTrianglesSize;
 
   std::string name;
 
-
-
-
-  protected:
-  std::vector<GLProgram> program;
-  QOpenGLFunctions_3_3_Core * f;
-  QOpenGLContext * currentContext;
-  std::vector<uint> VBO;
-  std::vector<uint> VAO;
-  std::vector<uint> EBO;
-
+protected:
   std::vector<Vertex> localPoints;
   // indexes of global(Scene) points
-  std::vector<std::pair<uint,uint>> lines;
-  //triangle vector
+  std::vector<std::pair<uint, uint>> lines;
+  // triangle vector
   std::vector<Triangle> triangles;
-  //std::vector<uint> pointIndexes;
+  // std::vector<uint> pointIndexes;
   std::vector<uint> localPointIndexes;
   std::vector<Frame> frames;
 
-  AbsHandler * baseHandler;
+  AbsHandler *baseHandler;
 
   int currentFrame;
 
   bool visibility;
 
-  Scene * currentScene;
-
-
-
-
+  Scene *currentScene;
 };
 
 #endif

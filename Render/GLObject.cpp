@@ -1,210 +1,221 @@
 #include "GLObject.hpp"
 #include "Scene.hpp"
 
-GLObject::GLObject(Scene * scene,QOpenGLContext * context){
-  if(context != nullptr){
+GLDrawable::GLDrawable(QOpenGLContext *context = nullptr) {
+  if (context != nullptr) {
     currentContext = context;
     f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(context);
-  }
-  else{
+  } else {
     currentContext = nullptr;
     f = nullptr;
   }
-  currentScene = scene;
-  visibility = true;
-  baseHandler = nullptr;
-
 }
 
-GLObject::GLObject(const GLObject & copyObj) 
-: localPoints(copyObj.localPoints), 
-  lines(copyObj.lines), 
-  triangles(copyObj.triangles)
+GLSimpleMesh::GLSimpleMesh(QOpenGLContext *context = 0) : GLDrawable(context) {}
 
-{
-  sourceFilePointsSize = copyObj.sourceFilePointsSize;
-  sourceFileLinesSize = copyObj.sourceFileLinesSize;
-  sourceFileTrianglesSize = copyObj.sourceFileTrianglesSize;
+void GLSimpleMesh::init() {
 
-  name = copyObj.name;
-  
-  program = copyObj.program;
-  currentContext = copyObj.currentContext;
-  f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(currentContext);
+  VAO.reserve(1);
+  VAO.resize(1);
 
-  currentFrame = 0;
-  visibility = copyObj.visibility;
-  currentScene = copyObj.currentScene;
-}
+  VBO.reserve(1);
+  VBO.resize(1);
 
-GLObject & GLObject::operator=(const GLObject& copyObj){
-  lines = copyObj.lines; 
-  triangles = copyObj.triangles;
-  //pointIndexes = copyObj.pointIndexes;
-  sourceFilePointsSize = copyObj.sourceFilePointsSize;
-  sourceFileLinesSize = copyObj.sourceFileLinesSize;
-  sourceFileTrianglesSize = copyObj.sourceFileTrianglesSize;
+  EBO.reserve(1);
+  EBO.resize(1);
 
-  name = copyObj.name;
-  
-  program = copyObj.program;
-  currentContext = copyObj.currentContext;
-  if(f != nullptr){
-    delete f;
+  program.reserve(1);
+  program.resize(1);
+
+  for (int i = 0; i < 1; i++) {
+    f->glGenVertexArrays(1, &VAO[i]);
+    f->glGenBuffers(1, &VBO[i]);
+    f->glGenBuffers(1, &EBO[i]);
+    program[i] = GLProgram(currentContext);
   }
-  f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(currentContext);
 
-  currentFrame = 0;
-  visibility = copyObj.visibility;
-  currentScene = copyObj.currentScene;
+  program[0].createShaderFromFile("fill_vertex.vert", "fill_frag.frag");
 
-  return *this;
+  std::vector<std::pair<glm::vec3, glm::vec3>> vertexBufferPoints;
+  for (glm::vec3 &v : points) {
+    // vertexBufferPoints.push_back({v.position,v.color});
+    vertexBufferPoints.push_back({v, {1.f, 1.f, 1.f}});
+  }
+
+  f->glBindVertexArray(VAO[0]);
+
+  f->glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+  f->glBufferData(GL_ARRAY_BUFFER,
+                  sizeof(std::pair<glm::vec3, glm::vec3>) *
+                      vertexBufferPoints.size(),
+                  vertexBufferPoints.data(), GL_DYNAMIC_DRAW);
+
+  f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
+  f->glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                  sizeof(uint) * localPointIndexes.size(),
+                  localPointIndexes.data(), GL_DYNAMIC_DRAW);
+
+  GLint point_position_attribute =
+      f->glGetAttribLocation(program[0].getProgramId(), "position");
+  GLint point_color_attribute =
+      f->glGetAttribLocation(program[0].getProgramId(), "color_a");
+  f->glVertexAttribPointer(point_position_attribute, 3, GL_FLOAT, GL_FALSE,
+                           sizeof(std::pair<glm::vec3, glm::vec3>), 0);
+  f->glVertexAttribPointer(point_color_attribute, 3, GL_FLOAT, GL_FALSE,
+                           sizeof(std::pair<glm::vec3, glm::vec3>),
+                           (void *)(sizeof(glm::vec3)));
+
+  f->glEnableVertexAttribArray(point_position_attribute);
+  f->glEnableVertexAttribArray(point_color_attribute);
+
+  f->glBindBuffer(GL_ARRAY_BUFFER, 0);         // unbid current VBO
+  f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // unbid current EBO
+  f->glBindVertexArray(0);                     // unbind current VAO
 }
 
-GLObject::~GLObject(){
-  delete baseHandler;
-  //delete f;
+void GLSimpleMesh::draw() {
+
+  f->glPointSize(4);
+  f->glLineWidth(1);
+
+  uint p0ID = program[0].getProgramId();
+  f->glUseProgram(p0ID);
+  GLuint vmatrix = f->glGetUniformLocation(p0ID, "m_view");
+  GLuint pmatrix = f->glGetUniformLocation(p0ID, "m_proj");
+  f->glUniformMatrix4fv(vmatrix, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.)));
+  f->glUniformMatrix4fv(pmatrix, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.)));
+
+  // POINTS
+  f->glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+
+  f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
+
+  f->glBindVertexArray(VAO[0]);
+
+  f->glDrawElements(GL_POINTS, indexes.size(), GL_UNSIGNED_INT, indexes.data());
+
+  f->glBindVertexArray(0);
+  f->glBindBuffer(GL_ARRAY_BUFFER, 0);
+  f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void GLObject::init(){}
+GLTriMesh::GLTriMesh(Scene *scene, QOpenGLContext *context)
+    : GLDrawable(context), currentScene(scene), visibility(true),
+      baseHandler(nullptr) {}
 
-void GLObject::draw(){}
+GLTriMesh::~GLTriMesh() { delete baseHandler; }
 
+void GLTriMesh::init() {}
 
-std::vector<Vertex> * GLObject::getLocalPoints(){
-  return &localPoints;
-}
+void GLTriMesh::draw() {}
 
-std::vector<Triangle> * GLObject::getTriangles(){
-  return &triangles;
-}
+std::vector<Vertex> *GLTriMesh::getLocalPoints() { return &localPoints; }
 
-std::vector<std::pair<uint,uint>> * GLObject::getLines(){
-  return &lines;
-}
+std::vector<Triangle> *GLTriMesh::getTriangles() { return &triangles; }
 
-void GLObject::addFrame(Frame f){
-  frames.push_back(f);
-}
+std::vector<std::pair<uint, uint>> *GLTriMesh::getLines() { return &lines; }
 
-std::vector<Frame> GLObject::getFrames(){
-  return frames;
-}
+void GLTriMesh::addFrame(Frame f) { frames.push_back(f); }
 
-GLProgram & GLObject::getProgram(uint idx){
-  return program[idx];
-}
+std::vector<Frame> GLTriMesh::getFrames() { return frames; }
 
-bool GLObject::nextFrame(){
-  if(currentFrame == (int)frames.size()-1){
+GLProgram &GLTriMesh::getProgram(uint idx) { return program[idx]; }
+
+bool GLTriMesh::nextFrame() {
+  if (currentFrame == (int)frames.size() - 1) {
     return false;
   }
-  currentFrame = std::min(currentFrame+1,(int)frames.size()-1);
+  currentFrame = std::min(currentFrame + 1, (int)frames.size() - 1);
   return true;
-
 }
 
-bool GLObject::previousFrame(){
-  if(currentFrame == 0){
+bool GLTriMesh::previousFrame() {
+  if (currentFrame == 0) {
     return false;
   }
-  currentFrame = std::max(currentFrame-1,0);
+  currentFrame = std::max(currentFrame - 1, 0);
   return true;
 }
 
-Triangle GLObject::getCurrentTriangle(){
-  return triangles[frames[currentFrame].TriangleEnd-1];
+Triangle GLTriMesh::getCurrentTriangle() {
+  return triangles[frames[currentFrame].TriangleEnd - 1];
 }
 
-int GLObject::getCurrentFrame(){
-  return currentFrame;
-}
+int GLTriMesh::getCurrentFrame() { return currentFrame; }
 
-AbsHandler * GLObject::getBaseHandler(){
-  return baseHandler;
-}
+AbsHandler *GLTriMesh::getBaseHandler() { return baseHandler; }
 
-void GLObject::setbaseHandler(AbsHandler * newHandler){
+void GLTriMesh::setbaseHandler(AbsHandler *newHandler) {
   baseHandler = newHandler;
 }
 
-int GLObject::pickTriangle(glm::vec3 p){
-  glm::vec3 p0,p1,p2; 
+int GLTriMesh::pickTriangle(glm::vec3 p) {
+  glm::vec3 p0, p1, p2;
   bool inside = false;
-  for(int i = 0; i< currentFrame ;i++){
-    //Vertex * v = triangles[i].getVertices();
+  for (int i = 0; i < currentFrame; i++) {
+    // Vertex * v = triangles[i].getVertices();
     p0 = triangles[i].vertices[0]->position;
     p1 = triangles[i].vertices[1]->position;
     p2 = triangles[i].vertices[2]->position;
-    //p0 = v[0].position;
-    //p1 = v[1].position;
-    //p2 = v[2].position;
-    
+    // p0 = v[0].position;
+    // p1 = v[1].position;
+    // p2 = v[2].position;
 
-    inside = Misc::Util::pointInsideTriangle(p,p0,p2,p1);
-    if(inside){
+    inside = Misc::Util::pointInsideTriangle(p, p0, p2, p1);
+    if (inside) {
       return i;
     }
   }
   return -1;
 }
 
-void GLObject::execHandlers(){
-  if(baseHandler != nullptr){  baseHandler->handle(this);}
-
+void GLTriMesh::execHandlers() {
+  if (baseHandler != nullptr) {
+    baseHandler->handle(this);
+  }
 }
 
-void GLObject::setVisible(bool vis){
-  visibility = vis;
-}
+void GLTriMesh::setVisible(bool vis) { visibility = vis; }
 
-bool GLObject::isVisible(){
-  return visibility;
-}
+bool GLTriMesh::isVisible() { return visibility; }
 
-void GLObject::restoreOriginal(){
+void GLTriMesh::restoreOriginal() { currentFrame = 0; }
 
-  currentFrame = 0;
-
-}
-
-//get scene index from vertex v
-int GLObject::getGlobalIndexFromVertex(Vertex v){
+// get scene index from vertex v
+int GLTriMesh::getGlobalIndexFromVertex(Vertex v) {
   int idx = currentScene->getIndexFromVertex(v);
   return idx;
 }
 
 ////get Vertex at index in vertex idx
-//Vertex GLObject::getGlobalVertexFromIndex(uint idx){
-//  return currentScene->getVertexFromIndex(globalPointIndexes.at(idx));
-//}
+// Vertex GLTriMesh::getGlobalVertexFromIndex(uint idx){
+//   return currentScene->getVertexFromIndex(globalPointIndexes.at(idx));
+// }
 
-uint GLObject::addVertexToScene(Vertex v){
+uint GLTriMesh::addVertexToScene(Vertex v) {
   uint idx = currentScene->addVertex(v);
   return idx;
 }
 
-std::vector<uint> * GLObject::getLocalIndexes(){
-  return &localPointIndexes;
-}
+std::vector<uint> *GLTriMesh::getLocalIndexes() { return &localPointIndexes; }
 
-glm::vec3 GLObject::getCenter(){
-  glm::vec3 res({0.f,0.f,0.f});
+glm::vec3 GLTriMesh::getCenter() {
+  glm::vec3 res({0.f, 0.f, 0.f});
   glm::vec3 maxV = maxValAxis();
   glm::vec3 minV = minValAxis();
-  glm::vec3 dif = (maxV-minV);
-  res[0] = minV[0] + dif[0]/2.f;
-  res[1] = minV[1] + dif[1]/2.f;
+  glm::vec3 dif = (maxV - minV);
+  res[0] = minV[0] + dif[0] / 2.f;
+  res[1] = minV[1] + dif[1] / 2.f;
   return res;
 }
 
-glm::vec3 GLObject::maxValAxis(){
+glm::vec3 GLTriMesh::maxValAxis() {
   float maxFloat = 2e22;
-  glm::vec3 max({-maxFloat,-maxFloat,-maxFloat});
-  for(Vertex v : localPoints){
+  glm::vec3 max({-maxFloat, -maxFloat, -maxFloat});
+  for (Vertex v : localPoints) {
     glm::vec3 p = v.position;
-    for(int i = 0;i<3;i++){
-      if(p[i] > max[i]){
+    for (int i = 0; i < 3; i++) {
+      if (p[i] > max[i]) {
         max[i] = p[i];
       }
     }
@@ -213,13 +224,13 @@ glm::vec3 GLObject::maxValAxis(){
   return max;
 }
 
-glm::vec3 GLObject::minValAxis(){
+glm::vec3 GLTriMesh::minValAxis() {
   float maxFloat = 2e22;
-  glm::vec3 min({maxFloat,maxFloat,maxFloat});
-  for(Vertex v : localPoints){
+  glm::vec3 min({maxFloat, maxFloat, maxFloat});
+  for (Vertex v : localPoints) {
     glm::vec3 p = v.position;
-    for(int i = 0;i<3;i++){
-      if(p[i] < min[i]){
+    for (int i = 0; i < 3; i++) {
+      if (p[i] < min[i]) {
         min[i] = p[i];
       }
     }
@@ -228,18 +239,16 @@ glm::vec3 GLObject::minValAxis(){
   return min;
 }
 
-Scene * GLObject::getScene(){
-  return currentScene;
-}
+Scene *GLTriMesh::getScene() { return currentScene; }
 
-void GLObject::addNewVertex(glm::vec3 pos, glm::vec3 color,bool isActive){
-  Vertex newVertex = {pos,color,isActive};
+void GLTriMesh::addNewVertex(glm::vec3 pos, glm::vec3 color, bool isActive) {
+  Vertex newVertex = {pos, color, isActive};
   localPoints.push_back(newVertex);
   uint newIdx = localPointIndexes.size();
   localPointIndexes.push_back(newIdx);
 }
 
-bool GLObject::isPointInside(glm::vec3 p){
+bool GLTriMesh::isPointInside(glm::vec3 p) {
 
   glm::vec3 global_min = minValAxis();
   glm::vec3 global_max = maxValAxis();
@@ -247,30 +256,30 @@ bool GLObject::isPointInside(glm::vec3 p){
   glm::vec3 res = global_max - global_min;
   float dmax = std::max({res.x, res.y, res.z});
   std::vector<glm::vec3> limitPoints;
-  glm::vec3 p_right({p.x+dmax+1,p.y,p.z});
-  glm::vec3 p_down({p.x,p.y-dmax-1,p.z});
-  glm::vec3 p_left({p.x-dmax-1,p.y,p.z});
-  glm::vec3 p_up({p.x,p.y+dmax+1,p.z});
+  glm::vec3 p_right({p.x + dmax + 1, p.y, p.z});
+  glm::vec3 p_down({p.x, p.y - dmax - 1, p.z});
+  glm::vec3 p_left({p.x - dmax - 1, p.y, p.z});
+  glm::vec3 p_up({p.x, p.y + dmax + 1, p.z});
 
   limitPoints.push_back(p_right);
   limitPoints.push_back(p_down);
   limitPoints.push_back(p_left);
   limitPoints.push_back(p_up);
 
-  for(glm::vec3 lp : limitPoints){
+  for (glm::vec3 lp : limitPoints) {
     int intersect = 0;
-    for(int i = 0;i<sourceFileLinesSize;i++){
-      std::pair<uint,uint> curEdge = lines.at(i);
-      if(Misc::Util::doIntersect(p,lp,localPoints.at(curEdge.first).position,localPoints.at(curEdge.second).position)){
+    for (int i = 0; i < sourceFileLinesSize; i++) {
+      std::pair<uint, uint> curEdge = lines.at(i);
+      if (Misc::Util::doIntersect(p, lp, localPoints.at(curEdge.first).position,
+                                  localPoints.at(curEdge.second).position)) {
         intersect += 1;
-        //break;
+        // break;
       }
     }
-    if(intersect % 2 == 0) {
+    if (intersect % 2 == 0) {
       return false;
     }
   }
 
   return true;
-
 }
