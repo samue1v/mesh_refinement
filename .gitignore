@@ -1,0 +1,69 @@
+### C++ ###
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+### VisualStudioCode ###
+.vscode/*
+build/*
+
+### Local libs ###
+qcustomplot/*
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+### jmesh and obj benchmark files ###
+*.2djmsh
+*.obj
+
+# screenshots
+screenshots/*
+### some test files ###
+ClockWidget*.*
+
+
+### helpful external scripts ###
+scripts/*
+
+
+### misc stuff
+Misc/*
+.clang-format
+.cache/*

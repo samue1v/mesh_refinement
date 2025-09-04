@@ -1,0 +1,343 @@
+#include "MyGLWidget.hpp"
+#include "../MainScreen/MainWidget.hpp"
+#include <iostream>
+#include <unistd.h>
+MyGLWidget::MyGLWidget(QWidget *parent) {
+  setFocusPolicy(Qt::ClickFocus);
+  setContentsMargins(5, 5, 5, 5);
+  eventManager = nullptr;
+  info = new InfoBox(this);
+  scene = nullptr;
+  f = nullptr;
+  // setFixedSize(900,parent->height());
+}
+
+MyGLWidget::~MyGLWidget() {
+
+  // f->glDeleteBuffers(1,&pointsVBO);
+  delete scene;
+  delete f;
+  delete info;
+}
+
+void MyGLWidget::setEventManager(MainWidget *mainwidget) {
+  eventManager = mainwidget;
+}
+
+void MyGLWidget::createScene(QString fileName, int type) {
+  makeCurrent();
+  if (scene != nullptr) {
+    delete scene;
+  }
+  scene = new Scene(this, context(), fileName.toStdString(), type);
+  // ainda falta fazer o indicado abaixo
+  // newObj->setbaseHandler(basehandler);
+  // newObj->init();
+
+  // aqui escreve o arquivo, aproveitando o loop para atualizar o menu
+  // for(int i = 0 ; i< glObjectVec.size();i++){
+  //   fileHandler->parseToText(glObjectVec.at(i),i);
+  // }
+  // fileHandler->writeFile();
+
+  // update();
+  // doneCurrent();
+  doneCurrent();
+}
+
+Scene *MyGLWidget::getScene() { return scene; }
+
+void MyGLWidget::initializeGL() {
+
+  // f =
+  // QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
+  f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(context());
+  f->initializeOpenGLFunctions();
+  f->glEnable(GL_DEPTH_TEST);
+  f->glEnable(GL_DEPTH_CLAMP);
+  f->glEnable(GL_BLEND);
+  f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  f->glEnable(GL_LINE_SMOOTH);
+  f->glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+  f->glEnable(GL_PROGRAM_POINT_SIZE);
+  f->glPointSize(2);
+  f->glLineWidth(1);
+
+  // f->glClearColor(219/255.0, 182/255.0, 182/255.0,1.0f);
+  f->glClearColor(255.0, 255.0, 255.0, 1.0f);
+
+  // widgetToPhoto();
+}
+
+void MyGLWidget::paintGL() {
+  f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  if (scene != nullptr) {
+    scene->render();
+  }
+}
+
+void MyGLWidget::resizeGL(int w, int h) {}
+
+void MyGLWidget::keyPressEvent(QKeyEvent *keyEvent) {
+  makeCurrent();
+  if (keyEvent->key() == Qt::Key_1) {
+    widgetToPhoto();
+  }
+
+  if (scene != nullptr) {
+
+    if (keyEvent->key() == Qt::Key_Left) {
+      scene->left_press(eventManager->getStep());
+    }
+
+    else if (keyEvent->key() == Qt::Key_Right) {
+      scene->right_press(eventManager->getStep());
+    }
+
+    else if (keyEvent->key() == Qt::Key_W) {
+      scene->w_press();
+    }
+
+    else if (keyEvent->key() == Qt::Key_S) {
+      scene->s_press();
+    }
+
+    else if (keyEvent->key() == Qt::Key_D) {
+      scene->d_press();
+    }
+
+    else if (keyEvent->key() == Qt::Key_A) {
+      scene->a_press();
+    }
+
+    else if (keyEvent->key() == Qt::Key_Up) {
+      scene->up_press();
+    }
+
+    else if (keyEvent->key() == Qt::Key_Down) {
+      scene->down_press();
+    }
+
+    else if (keyEvent->key() == Qt::Key_Space) {
+      scene->space_press();
+    }
+
+    else if (keyEvent->key() == Qt::Key_V) {
+      scene->v_press();
+    }
+
+    else if (keyEvent->key() == Qt::Key_8) {
+      scene->scrollDown();
+    }
+
+    else if (keyEvent->key() == Qt::Key_9) {
+      scene->scrollUp();
+
+    } else if (keyEvent->key() == Qt::Key_C) {
+      scene->getCamera()->centerCamera(
+          scene->currentObj->getQuadTree()->getCenter(),
+          scene->currentObj->getQuadTree()->getRootHeight());
+
+    }
+
+    else if (keyEvent->key() == Qt::Key_Plus) {
+      scene->increaseSpeed();
+    } else if (keyEvent->key() == Qt::Key_Minus) {
+      scene->decreaseSpeed();
+    }
+  }
+  updateWidget();
+  doneCurrent();
+}
+
+void MyGLWidget::wheelEvent(QWheelEvent *event) {
+  makeCurrent();
+  if (scene != nullptr) {
+    if (event->angleDelta().y() > 0) {
+      scene->scrollUp();
+    }
+
+    else if (event->angleDelta().y() < 0) {
+      scene->scrollDown();
+    }
+  }
+  updateWidget();
+  doneCurrent();
+}
+
+void MyGLWidget::notifyPrevious() { eventManager->notifyPrevious(); }
+
+void MyGLWidget::notifyNext(float score) { eventManager->notifyNext(score); }
+
+void MyGLWidget::mousePressEvent(QMouseEvent *evt) {
+  makeCurrent();
+  /*   if(glObjectVec.size() == 0){return;}
+    makeCurrent();
+    QPointF virtualPos = evt->pos();
+    glm::mat4 view = camera->getViewMatrix();
+    glm::mat4 proj = camera->getProjMatrix();
+    glm::mat4 projView = proj*view;
+    glm::mat4 projViewInv = glm::inverse(projView);
+    float w = width();
+    float h = height();
+    glm::vec3 camerapos = camera->getPos();
+
+
+    glm::vec4 pos(virtualPos.x(),virtualPos.y(),-1.f,1.0f);
+
+
+    pos.x = (pos.x/w)*2.f -1.f;
+    pos.y = ((h-pos.y)/h)*2.f - 1.f;
+
+    pos = (projViewInv*pos);
+
+    pos.w = 1.f/pos.w;
+
+    pos.x *= pos.w;
+    pos.y *= pos.w;
+    pos.z *= pos.w;
+    for(GLObject * glObject : glObjectVec){
+      int idx = glObject->pickTriangle(glm::vec3(pos));
+
+      if(idx>-1){
+        info->update(idx, pos, glObject->getTriangles()->at(idx));
+        break;
+      }
+      else{
+        info->update(idx, pos, Triangle());
+      }
+    } */
+  if (scene == nullptr) {
+    return;
+  }
+  if (evt->button() == Qt::LeftButton) {
+    QPointF virtualPos = evt->pos();
+    float w = width();
+    float h = height();
+    std::pair<int, Triangle> ret = scene->mousePickLeft(
+        glm::vec3(virtualPos.x(), virtualPos.y(), 0.f), w, h);
+    info->update(ret.first, ret.second);
+  } else if (evt->button() == Qt::RightButton) {
+    QPointF virtualPos = evt->pos();
+    float w = width();
+    float h = height();
+    scene->mousePickRight(glm::vec3(virtualPos.x(), virtualPos.y(), 0.f), w, h);
+    scene->updateText();
+  }
+  evt->accept();
+  update();
+  doneCurrent();
+}
+
+void MyGLWidget::setVisibleObjects(std::string name, int transformType) {
+  scene->setVisible(name, transformType);
+  updateWidget();
+}
+
+void MyGLWidget::updateWidget() {
+  makeCurrent();
+  // info->update(-1);
+  update();
+  doneCurrent();
+}
+
+void MyGLWidget::widgetToPhoto() {
+
+  // scene->getCamera()->setPos({-1.f,-1.f,1.f});
+  std::vector<std::string> dirNames = {"good/", "bad/", "idk/"};
+  //std::string srcRootDir = "/home/galeg0/Documents/back/pibic/objFiles/testes/";
+  //std::string dstRootDir = "screenshots/full_result/";
+  std::string srcRootDir = "/home/galeg0/Documents/back/smooth_screenshot/objFiles/testes/";
+  std::string dstRootDir = "/home/galeg0/Documents/back/smooth_screenshot/screenshots/full_result/";
+  std::cout << this->width() << "x" << this->height() << std::endl;
+  QStringList filters;
+  filters << "*.obj";
+  for (auto d : dirNames) {
+    QString finalSrcPath = QString::fromStdString(srcRootDir + d);
+    QDir dir(finalSrcPath);
+    dir.setNameFilters(filters);
+    dir.setFilter(QDir::Files | QDir::NoSymLinks);
+    QStringList fileList = dir.entryList();
+
+    std::string dstPath = dstRootDir + d;
+    int count = 0;
+    for (auto s : fileList) {
+
+      std::string fileSrc = finalSrcPath.toStdString() + s.toStdString();
+      //createScene(QString::fromStdString(fileSrc), 1);
+      createScene(QString::fromStdString(fileSrc), 0);
+      // std::cout << fileSrc << std::endl;
+      QDir().mkpath(
+          QString::fromStdString(dstPath)); // Ensure the directory exists
+      std::cout << dstPath << std::endl;
+      screenshot(QString::fromStdString(dstPath), count);
+      count++;
+    }
+  }
+}
+
+void MyGLWidget::screenshot(QString dstPath, int example_number) {
+
+  for (int i = 0; i < scene->objects.size(); i++) {
+    eventManager->notifyClear();
+    setVisibleObjects(scene->objects[i]->name, 0);
+    int frameSize = scene->objects[i]->getFrames().size();
+    scene->right_press(frameSize);
+    float height = scene->objects[i]->getQuadTree()->getRootHeight();
+    glm::vec3 quadCenter = scene->objects[i]->getQuadTree()->getRootCenter();
+
+    float fullHeight = height;
+    float aspect = float(this->width()) / float(this->height());
+    float fullWidth = fullHeight * aspect;
+
+    // Half sizes of the full square
+    float halfW = fullWidth / 2.0f;
+    float halfH = fullHeight / 2.0f;
+
+    // Offset from center to reach each quadrant's center
+    float quarterW = halfW / 2.0f; // or just: quarterW = fullWidth / 2.0f;
+    float quarterH = halfH / 2.0f;
+
+    // Offsets relative to the square center
+    glm::vec3 offsets[4] = {
+        {-quarterW, quarterH, 0.0f},  // Top-left
+        {quarterW, quarterH, 0.0f},   // Top-right
+        {-quarterW, -quarterH, 0.0f}, // Bottom-left
+        {quarterW, -quarterH, 0.0f}   // Bottom-right
+    };
+
+    float quadrantHeight = fullHeight / 2.0f;
+    // for (int j = 0; j < 4; j++) {
+    scene->getCamera()->centerCamera(quadCenter, height);
+    QPixmap pixmap0 =
+        eventManager->barPlot->grab(); // myWidget is a pointer to any QWidget
+    QPixmap pixmap1 = eventManager->pieChartView
+                          ->grab(); // myWidget is a pointer to any QWidget
+                                    //
+
+       int width_pix = pixmap0.width() + pixmap1.width();
+    int height_pix = qMax(pixmap0.height(), pixmap1.height());
+
+    // Create new pixmap and painter
+    QPixmap combined(width_pix, height_pix);
+    combined.fill(Qt::transparent); // Optional: fill background if needed
+
+    QPainter painter(&combined);
+    painter.drawPixmap(0, 0, pixmap0);
+    painter.drawPixmap(pixmap0.width(), 0, pixmap1);
+    painter.end();
+    
+
+
+
+    // Save result
+    combined.save(dstPath +
+                 QString("e_%1_%2_graph_smooth.png").arg(example_number).arg(i));
+    // QImage screenshot = this->grabFramebuffer();
+    // QString filename =
+    //     dstPath +
+    //     QString("e_%1_%2_smooth.png").arg(example_number).arg(i);
+    // screenshot.save(filename);
+    //}
+  }
+}
