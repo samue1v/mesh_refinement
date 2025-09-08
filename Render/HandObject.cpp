@@ -2,22 +2,16 @@
 #include "Scene.hpp"
 
 HandObject::HandObject(Scene *scene, QOpenGLContext *context)
-    : GLObject::GLObject(scene, context) {
+    : GLTriMesh::GLTriMesh(scene, context) {
   tree = new QuadTree(context, this, 9);
   currentFrame = 0;
 }
 
-HandObject::HandObject(const HandObject &copyObj) : GLObject(copyObj) {}
 
 HandObject::~HandObject() {
   if (tree != nullptr) {
     delete tree;
   }
-}
-
-HandObject &HandObject::operator=(const HandObject &copyObj) {
-  GLObject::operator=(copyObj);
-  return *this;
 }
 
 void HandObject::init() {
@@ -400,7 +394,7 @@ void HandObject::draw() {
   f->glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void HandObject::restoreOriginal() { GLObject::restoreOriginal(); }
+void HandObject::restoreOriginal() { GLTriMesh::restoreOriginal(); }
 
 bool HandObject::isQuadVisible() { return tree->isVisible(); }
 

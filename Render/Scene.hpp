@@ -1,11 +1,12 @@
 #ifndef SCENE_HPP
 #define SCENE_HPP
+#include "../Common/DrawCommands.hpp"
 #include "../Logic/CoRHandlers.hpp"
 #include "../Logic/FileHandler.hpp"
 #include "Camera.hpp"
 #include "GLObject.hpp"
 #include "HandObject.hpp"
-#include "TextRender.hpp"
+//#include "TextRender.hpp"
 #include <QOpenGLContext>
 #include <format>
 #include <functional>
@@ -18,32 +19,26 @@
 
 class MyGLWidget;
 
-struct KeyEqualsVec3
-{
-  bool operator()(Vertex lhs, Vertex rhs) const
-  {
+struct KeyEqualsVec3 {
+  bool operator()(Vertex lhs, Vertex rhs) const {
     const float epsilon = 10e-9;
     return (std::abs(lhs.position.x - rhs.position.x) < epsilon &&
             std::abs(lhs.position.y - rhs.position.y) < epsilon);
   }
 };
 
-struct KeyHasherVec3
-{
-  std::size_t operator()(const Vertex& k) const
-  {
+struct KeyHasherVec3 {
+  std::size_t operator()(const Vertex &k) const {
     // lembrar de olhar no stackoverflow!!!!!!!!!!!!!!!
-    return ((std::hash<float>()(k.position.x) ^ (std::hash<float>()(k.position.y) << 1)));
+    return ((std::hash<float>()(k.position.x) ^
+             (std::hash<float>()(k.position.y) << 1)));
   }
 };
 
-class Scene
-{
+class Scene {
 public:
-  Scene(MyGLWidget* glw = nullptr,
-        QOpenGLContext* currentContext = nullptr,
-        std::string sceneSrc = "",
-        int type = 0);
+  Scene(MyGLWidget *glw , QOpenGLContext *currentContext,
+        const MenuCommands::CreateSceneCMD &cmd_scene);
   ~Scene();
   void addObject(std::string src);
   void removeObject(std::string name);
@@ -60,7 +55,8 @@ public:
   void v_press();
   void left_press(int step);
   void right_press(int step);
-  std::pair<int, Triangle> mousePickLeft(glm::vec3 virtualPos, int width, int height);
+  std::pair<int, Triangle> mousePickLeft(glm::vec3 virtualPos, int width,
+                                         int height);
   void mousePickRight(glm::vec3 virtualPos, int width, int height);
   void scrollUp();
   void scrollDown();
@@ -68,26 +64,26 @@ public:
   void decreaseSpeed();
   int getNumObjects();
   void updateText();
-  Camera* getCamera();
-  std::vector<Vertex>* getScenePoints();
+  Camera *getCamera();
+  std::vector<Vertex> *getScenePoints();
   int getIndexFromVertex(Vertex v);
   Vertex getVertexFromIndex(uint idx);
   std::string getObjectName(int idx);
-  AbsHandler* buildHandler(int typeHandler);
+  AbsHandler *buildHandler(int typeHandler);
 
-//private:
+  // private:
   std::string sceneSource;
-  std::vector<HandObject*> objects;
+  std::vector<HandObject *> objects;
   std::unordered_map<Vertex, uint, KeyHasherVec3, KeyEqualsVec3> table;
   std::vector<Vertex> scenePoints;
-  HandObject * currentObj;
+  HandObject *currentObj;
 
 private:
-  GLFileHandler* f;
-  QOpenGLContext* currentContext;
-  TextRender* textRenderer;
-  Camera* camera;
-  MyGLWidget* glWidget;
+  GLFileHandler *f;
+  QOpenGLContext *currentContext;
+  //TextRender *textRenderer;
+  Camera *camera;
+  MyGLWidget *glWidget;
 };
 
 #endif

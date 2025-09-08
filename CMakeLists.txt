@@ -29,7 +29,7 @@ qt_add_executable(hand main.cpp
                   Render/Camera.cpp
                   Render/InfoBox.cpp
                   Render/Scene.cpp
-                  Render/TextRender.cpp
+                  #Render/TextRender.cpp
                   Render/QuadTree.cpp
                   Logic/Triangle.cpp
                   Logic/CoRHandlers.cpp
@@ -38,17 +38,19 @@ qt_add_executable(hand main.cpp
                   Logic/Util.cpp
                   Logic/File.cpp
                   MainScreen/MainWidget.cpp
-                  MainScreen/SideMenu.cpp
-                  MainScreen/SideSubMenu.cpp
-                  MainScreen/FileChooser.cpp
-                  Charts/BarChart.cpp
-                  Charts/PieChart.cpp
-                  Charts/BarPlot.cpp
-                  qcustomplot/qcustomplot.cpp
+                  #Charts/BarChart.cpp
+                  #Charts/PieChart.cpp
+                  #Charts/BarPlot.cpp
+                  Common/DrawCommands.hpp
+                  External/imgui/imgui.cpp
+                  External/imgui/imgui_draw.cpp
+                  External/imgui/imgui_tables.cpp
+                  External/imgui/imgui_widgets.cpp
+                  External/imgui/backends/imgui_impl_opengl3.h
 )
 
 target_link_libraries(hand PRIVATE Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Charts Qt6::OpenGLWidgets Qt6::PrintSupport ${FREETYPE_LIBRARIES})
-target_include_directories(hand PRIVATE ${FREETYPE_INCLUDE_DIRS})
+target_include_directories(hand PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/External/imgui ${FREETYPE_INCLUDE_DIRS})
 #target_link_libraries(hand PRIVATE Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::OpenGLWidgets Qt6::PrintSupport)
 set_property(TARGET hand  PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 #message(PROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}")

@@ -1,7 +1,7 @@
 #include "GLObject.hpp"
 #include "Scene.hpp"
 
-GLDrawable::GLDrawable(QOpenGLContext *context = nullptr) {
+GLDrawable::GLDrawable(QOpenGLContext *context = nullptr) : visibility(true) {
   if (context != nullptr) {
     currentContext = context;
     f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(context);
@@ -10,6 +10,12 @@ GLDrawable::GLDrawable(QOpenGLContext *context = nullptr) {
     f = nullptr;
   }
 }
+
+
+bool GLDrawable::isVisible() { return visibility; }
+
+
+void GLDrawable::setVisible(const bool vis) { visibility = vis; }
 
 GLSimpleMesh::GLSimpleMesh(QOpenGLContext *context = 0) : GLDrawable(context) {}
 
@@ -37,9 +43,9 @@ void GLSimpleMesh::init() {
   program[0].createShaderFromFile("fill_vertex.vert", "fill_frag.frag");
 
   std::vector<std::pair<glm::vec3, glm::vec3>> vertexBufferPoints;
-  for (glm::vec3 &v : points) {
+  for (std::pair<glm::vec3,glm::vec3> &v : points) {
     // vertexBufferPoints.push_back({v.position,v.color});
-    vertexBufferPoints.push_back({v, {1.f, 1.f, 1.f}});
+    vertexBufferPoints.push_back(v);
   }
 
   f->glBindVertexArray(VAO[0]);
@@ -47,13 +53,13 @@ void GLSimpleMesh::init() {
   f->glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
   f->glBufferData(GL_ARRAY_BUFFER,
                   sizeof(std::pair<glm::vec3, glm::vec3>) *
-                      vertexBufferPoints.size(),
-                  vertexBufferPoints.data(), GL_DYNAMIC_DRAW);
+                      points.size(),
+                  points.data(), GL_DYNAMIC_DRAW);
 
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
   f->glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                  sizeof(uint) * localPointIndexes.size(),
-                  localPointIndexes.data(), GL_DYNAMIC_DRAW);
+                  sizeof(uint) * indexes.size(),
+                  indexes.data(), GL_DYNAMIC_DRAW);
 
   GLint point_position_attribute =
       f->glGetAttribLocation(program[0].getProgramId(), "position");
@@ -99,9 +105,10 @@ void GLSimpleMesh::draw() {
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+
+
 GLTriMesh::GLTriMesh(Scene *scene, QOpenGLContext *context)
-    : GLDrawable(context), currentScene(scene), visibility(true),
-      baseHandler(nullptr) {}
+    : GLDrawable(context), currentScene(scene), baseHandler(nullptr) {}
 
 GLTriMesh::~GLTriMesh() { delete baseHandler; }
 
@@ -175,9 +182,7 @@ void GLTriMesh::execHandlers() {
   }
 }
 
-void GLTriMesh::setVisible(bool vis) { visibility = vis; }
 
-bool GLTriMesh::isVisible() { return visibility; }
 
 void GLTriMesh::restoreOriginal() { currentFrame = 0; }
 

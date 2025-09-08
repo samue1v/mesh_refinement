@@ -28,10 +28,14 @@ public:
 class GLDrawable : public QObject, public GLInterface {
   Q_OBJECT
 public:
-  GLDrawable(QOpenGLContext *context = 0);
+  GLDrawable(QOpenGLContext *context);
   GLDrawable(const GLDrawable &) = delete;
   GLDrawable &operator=(const GLDrawable &) = delete;
   ~GLDrawable();
+
+  bool isVisible();
+  void setVisible(const bool vis);
+
   virtual void draw() = 0;
   virtual void init() = 0;
 
@@ -43,13 +47,14 @@ protected:
   std::vector<uint> VBO;
   std::vector<uint> VAO;
   std::vector<uint> EBO;
+  bool visibility;
 
-}
+};
 
 // Simple mesh interface for primitives and simple objects.
 class GLSimpleMesh : public GLDrawable{
 public:
-  GLSimpleMesh(QOpenGLContext *context = 0);
+  GLSimpleMesh(QOpenGLContext *context);
   GLSimpleMesh(const GLSimpleMesh &copyObj) = delete ;
   GLSimpleMesh(GLSimpleMesh &&other) = delete;
   ~GLSimpleMesh() = default;
@@ -60,15 +65,15 @@ public:
   GLSimpleMesh &operator=(const GLSimpleMesh &copyObj) = delete;
 
 public:
-  std::vector<glm::vec3> points;
+  std::vector<std::pair<glm::vec3,glm::vec3>> points;
   std::vector<uint32_t> indexes;
 
-}
+};
 
 // Mesh interface for scene and complex algortihms
 class GLTriMesh : public GLDrawable {
 public:
-  GLTriMesh(Scene *scene = 0, QOpenGLContext *context = 0);
+  GLTriMesh(Scene *scene, QOpenGLContext *context);
   ~GLTriMesh();
   GLTriMesh(const GLTriMesh &copyObj) = delete ;
   GLTriMesh(GLTriMesh &&other) = delete;
@@ -119,9 +124,7 @@ public:
 
   int pickTriangle(glm::vec3 point);
 
-  void setVisible(bool vis);
 
-  bool isVisible();
 
   int getGlobalIndexFromVertex(Vertex v);
 
@@ -156,7 +159,6 @@ protected:
 
   int currentFrame;
 
-  bool visibility;
 
   Scene *currentScene;
 };

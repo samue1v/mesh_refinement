@@ -1,14 +1,11 @@
 #include <QApplication>
-#include <iostream>
-#include <QHBoxLayout>
-#include <string.h>
-#include <fstream>
-#include "MainScreen/MainWidget.hpp"
+#include <QSurfaceFormat>
+#include "Render/MyGLWidget.hpp"
 
 
 int main(int argc, char ** argv){
     QApplication app(argc,argv);
-    MainWidget * widget = new MainWidget();
+    MyGLWidget * widget = new MyGLWidget();
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
     format.setStencilBufferSize(8);

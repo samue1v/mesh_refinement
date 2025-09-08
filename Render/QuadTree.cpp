@@ -113,7 +113,7 @@ int Node::getSeq(){
   return seq;
 }
 
-QuadTree::QuadTree(QOpenGLContext * _context,GLObject * _glObj,int _depth) : GLObject::GLObject(_glObj->getScene(),_context),glObj(_glObj), depth(_depth), rootNode(nullptr){
+QuadTree::QuadTree(QOpenGLContext * _context,GLDrawable * _glObj,int _depth) : GLDrawable::GLDrawable(_glObj->getScene(),_context),glObj(_glObj), depth(_depth), rootNode(nullptr){
 
 }
 
@@ -235,11 +235,6 @@ void QuadTree::draw(){
 
  
 }
-
-void QuadTree::restoreOriginal(){
-  
-}
-
 
 void QuadTree::initQuadTree(){
 

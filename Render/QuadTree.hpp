@@ -64,10 +64,10 @@ int seq;
 
 };
 
-class QuadTree : public GLObject{
+class QuadTree : public GLDrawable{
 
 public:
-QuadTree(QOpenGLContext * context = nullptr,GLObject * _glObj = nullptr,int maxDepth = -1);
+QuadTree(QOpenGLContext * context = nullptr,GLDrawable * _glObj = nullptr,int maxDepth = -1);
 ~QuadTree();
 void initQuadTree();
 void makeQuadTree(Node * child, int depth);
@@ -81,8 +81,6 @@ float getRootHeight();
 
 void init() override;
 void draw() override;
-void restoreOriginal() override;
-
 
 private:
 Node * getNeighbour(Node * root, int dir);

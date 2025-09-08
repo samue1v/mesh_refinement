@@ -1,15 +1,13 @@
 #include "MyGLWidget.hpp"
-#include "../MainScreen/MainWidget.hpp"
 #include <iostream>
 #include <unistd.h>
 MyGLWidget::MyGLWidget(QWidget *parent) {
   setFocusPolicy(Qt::ClickFocus);
   setContentsMargins(5, 5, 5, 5);
-  eventManager = nullptr;
   info = new InfoBox(this);
   scene = nullptr;
   f = nullptr;
-  // setFixedSize(900,parent->height());
+  mainMenu = new MainWidget(this);
 }
 
 MyGLWidget::~MyGLWidget() {
@@ -20,28 +18,12 @@ MyGLWidget::~MyGLWidget() {
   delete info;
 }
 
-void MyGLWidget::setEventManager(MainWidget *mainwidget) {
-  eventManager = mainwidget;
-}
-
-void MyGLWidget::createScene(QString fileName, int type) {
+void MyGLWidget::createScene(MenuCommands::CreateSceneCMD &scene_cmd) {
   makeCurrent();
   if (scene != nullptr) {
     delete scene;
   }
-  scene = new Scene(this, context(), fileName.toStdString(), type);
-  // ainda falta fazer o indicado abaixo
-  // newObj->setbaseHandler(basehandler);
-  // newObj->init();
-
-  // aqui escreve o arquivo, aproveitando o loop para atualizar o menu
-  // for(int i = 0 ; i< glObjectVec.size();i++){
-  //   fileHandler->parseToText(glObjectVec.at(i),i);
-  // }
-  // fileHandler->writeFile();
-
-  // update();
-  // doneCurrent();
+  scene = new Scene(this, context(), scene_cmd);
   doneCurrent();
 }
 
@@ -49,8 +31,6 @@ Scene *MyGLWidget::getScene() { return scene; }
 
 void MyGLWidget::initializeGL() {
 
-  // f =
-  // QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
   f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(context());
   f->initializeOpenGLFunctions();
   f->glEnable(GL_DEPTH_TEST);
@@ -63,7 +43,6 @@ void MyGLWidget::initializeGL() {
   f->glPointSize(2);
   f->glLineWidth(1);
 
-  // f->glClearColor(219/255.0, 182/255.0, 182/255.0,1.0f);
   f->glClearColor(255.0, 255.0, 255.0, 1.0f);
 
   // widgetToPhoto();
@@ -71,6 +50,7 @@ void MyGLWidget::initializeGL() {
 
 void MyGLWidget::paintGL() {
   f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  mainMenu->render();
   if (scene != nullptr) {
     scene->render();
   }
@@ -80,18 +60,18 @@ void MyGLWidget::resizeGL(int w, int h) {}
 
 void MyGLWidget::keyPressEvent(QKeyEvent *keyEvent) {
   makeCurrent();
-  if (keyEvent->key() == Qt::Key_1) {
-    widgetToPhoto();
-  }
+  // if (keyEvent->key() == Qt::Key_1) {
+  //   widgetToPhoto();
+  // }
 
   if (scene != nullptr) {
 
     if (keyEvent->key() == Qt::Key_Left) {
-      scene->left_press(eventManager->getStep());
+      scene->left_press(mainMenu->getStep());
     }
 
     else if (keyEvent->key() == Qt::Key_Right) {
-      scene->right_press(eventManager->getStep());
+      scene->right_press(mainMenu->getStep());
     }
 
     else if (keyEvent->key() == Qt::Key_W) {
@@ -135,7 +115,7 @@ void MyGLWidget::keyPressEvent(QKeyEvent *keyEvent) {
 
     } else if (keyEvent->key() == Qt::Key_C) {
       scene->getCamera()->centerCamera(
-          scene->currentObj->getQuadTree()->getCenter(),
+          scene->currentObj->getQuadTree()->getRootCenter(),
           scene->currentObj->getQuadTree()->getRootHeight());
 
     }
@@ -164,10 +144,6 @@ void MyGLWidget::wheelEvent(QWheelEvent *event) {
   updateWidget();
   doneCurrent();
 }
-
-void MyGLWidget::notifyPrevious() { eventManager->notifyPrevious(); }
-
-void MyGLWidget::notifyNext(float score) { eventManager->notifyNext(score); }
 
 void MyGLWidget::mousePressEvent(QMouseEvent *evt) {
   makeCurrent();
@@ -241,103 +217,107 @@ void MyGLWidget::updateWidget() {
   doneCurrent();
 }
 
-void MyGLWidget::widgetToPhoto() {
-
-  // scene->getCamera()->setPos({-1.f,-1.f,1.f});
-  std::vector<std::string> dirNames = {"good/", "bad/", "idk/"};
-  //std::string srcRootDir = "/home/galeg0/Documents/back/pibic/objFiles/testes/";
-  //std::string dstRootDir = "screenshots/full_result/";
-  std::string srcRootDir = "/home/galeg0/Documents/back/smooth_screenshot/objFiles/testes/";
-  std::string dstRootDir = "/home/galeg0/Documents/back/smooth_screenshot/screenshots/full_result/";
-  std::cout << this->width() << "x" << this->height() << std::endl;
-  QStringList filters;
-  filters << "*.obj";
-  for (auto d : dirNames) {
-    QString finalSrcPath = QString::fromStdString(srcRootDir + d);
-    QDir dir(finalSrcPath);
-    dir.setNameFilters(filters);
-    dir.setFilter(QDir::Files | QDir::NoSymLinks);
-    QStringList fileList = dir.entryList();
-
-    std::string dstPath = dstRootDir + d;
-    int count = 0;
-    for (auto s : fileList) {
-
-      std::string fileSrc = finalSrcPath.toStdString() + s.toStdString();
-      //createScene(QString::fromStdString(fileSrc), 1);
-      createScene(QString::fromStdString(fileSrc), 0);
-      // std::cout << fileSrc << std::endl;
-      QDir().mkpath(
-          QString::fromStdString(dstPath)); // Ensure the directory exists
-      std::cout << dstPath << std::endl;
-      screenshot(QString::fromStdString(dstPath), count);
-      count++;
-    }
-  }
-}
-
-void MyGLWidget::screenshot(QString dstPath, int example_number) {
-
-  for (int i = 0; i < scene->objects.size(); i++) {
-    eventManager->notifyClear();
-    setVisibleObjects(scene->objects[i]->name, 0);
-    int frameSize = scene->objects[i]->getFrames().size();
-    scene->right_press(frameSize);
-    float height = scene->objects[i]->getQuadTree()->getRootHeight();
-    glm::vec3 quadCenter = scene->objects[i]->getQuadTree()->getRootCenter();
-
-    float fullHeight = height;
-    float aspect = float(this->width()) / float(this->height());
-    float fullWidth = fullHeight * aspect;
-
-    // Half sizes of the full square
-    float halfW = fullWidth / 2.0f;
-    float halfH = fullHeight / 2.0f;
-
-    // Offset from center to reach each quadrant's center
-    float quarterW = halfW / 2.0f; // or just: quarterW = fullWidth / 2.0f;
-    float quarterH = halfH / 2.0f;
-
-    // Offsets relative to the square center
-    glm::vec3 offsets[4] = {
-        {-quarterW, quarterH, 0.0f},  // Top-left
-        {quarterW, quarterH, 0.0f},   // Top-right
-        {-quarterW, -quarterH, 0.0f}, // Bottom-left
-        {quarterW, -quarterH, 0.0f}   // Bottom-right
-    };
-
-    float quadrantHeight = fullHeight / 2.0f;
-    // for (int j = 0; j < 4; j++) {
-    scene->getCamera()->centerCamera(quadCenter, height);
-    QPixmap pixmap0 =
-        eventManager->barPlot->grab(); // myWidget is a pointer to any QWidget
-    QPixmap pixmap1 = eventManager->pieChartView
-                          ->grab(); // myWidget is a pointer to any QWidget
-                                    //
-
-       int width_pix = pixmap0.width() + pixmap1.width();
-    int height_pix = qMax(pixmap0.height(), pixmap1.height());
-
-    // Create new pixmap and painter
-    QPixmap combined(width_pix, height_pix);
-    combined.fill(Qt::transparent); // Optional: fill background if needed
-
-    QPainter painter(&combined);
-    painter.drawPixmap(0, 0, pixmap0);
-    painter.drawPixmap(pixmap0.width(), 0, pixmap1);
-    painter.end();
-    
-
-
-
-    // Save result
-    combined.save(dstPath +
-                 QString("e_%1_%2_graph_smooth.png").arg(example_number).arg(i));
-    // QImage screenshot = this->grabFramebuffer();
-    // QString filename =
-    //     dstPath +
-    //     QString("e_%1_%2_smooth.png").arg(example_number).arg(i);
-    // screenshot.save(filename);
-    //}
-  }
-}
+// void MyGLWidget::widgetToPhoto() {
+//
+//   // scene->getCamera()->setPos({-1.f,-1.f,1.f});
+//   std::vector<std::string> dirNames = {"good/", "bad/", "idk/"};
+//   //std::string srcRootDir =
+//   "/home/galeg0/Documents/back/pibic/objFiles/testes/";
+//   //std::string dstRootDir = "screenshots/full_result/";
+//   std::string srcRootDir =
+//   "/home/galeg0/Documents/back/smooth_screenshot/objFiles/testes/";
+//   std::string dstRootDir =
+//   "/home/galeg0/Documents/back/smooth_screenshot/screenshots/full_result/";
+//   std::cout << this->width() << "x" << this->height() << std::endl;
+//   QStringList filters;
+//   filters << "*.obj";
+//   for (auto d : dirNames) {
+//     QString finalSrcPath = QString::fromStdString(srcRootDir + d);
+//     QDir dir(finalSrcPath);
+//     dir.setNameFilters(filters);
+//     dir.setFilter(QDir::Files | QDir::NoSymLinks);
+//     QStringList fileList = dir.entryList();
+//
+//     std::string dstPath = dstRootDir + d;
+//     int count = 0;
+//     for (auto s : fileList) {
+//
+//       std::string fileSrc = finalSrcPath.toStdString() + s.toStdString();
+//       //createScene(QString::fromStdString(fileSrc), 1);
+//       createScene(QString::fromStdString(fileSrc), 0);
+//       // std::cout << fileSrc << std::endl;
+//       QDir().mkpath(
+//           QString::fromStdString(dstPath)); // Ensure the directory exists
+//       std::cout << dstPath << std::endl;
+//       screenshot(QString::fromStdString(dstPath), count);
+//       count++;
+//     }
+//   }
+// }
+//
+// void MyGLWidget::screenshot(QString dstPath, int example_number) {
+//
+//   for (int i = 0; i < scene->objects.size(); i++) {
+//     eventManager->notifyClear();
+//     setVisibleObjects(scene->objects[i]->name, 0);
+//     int frameSize = scene->objects[i]->getFrames().size();
+//     scene->right_press(frameSize);
+//     float height = scene->objects[i]->getQuadTree()->getRootHeight();
+//     glm::vec3 quadCenter = scene->objects[i]->getQuadTree()->getRootCenter();
+//
+//     float fullHeight = height;
+//     float aspect = float(this->width()) / float(this->height());
+//     float fullWidth = fullHeight * aspect;
+//
+//     // Half sizes of the full square
+//     float halfW = fullWidth / 2.0f;
+//     float halfH = fullHeight / 2.0f;
+//
+//     // Offset from center to reach each quadrant's center
+//     float quarterW = halfW / 2.0f; // or just: quarterW = fullWidth / 2.0f;
+//     float quarterH = halfH / 2.0f;
+//
+//     // Offsets relative to the square center
+//     glm::vec3 offsets[4] = {
+//         {-quarterW, quarterH, 0.0f},  // Top-left
+//         {quarterW, quarterH, 0.0f},   // Top-right
+//         {-quarterW, -quarterH, 0.0f}, // Bottom-left
+//         {quarterW, -quarterH, 0.0f}   // Bottom-right
+//     };
+//
+//     float quadrantHeight = fullHeight / 2.0f;
+//     // for (int j = 0; j < 4; j++) {
+//     scene->getCamera()->centerCamera(quadCenter, height);
+//     QPixmap pixmap0 =
+//         eventManager->barPlot->grab(); // myWidget is a pointer to any
+//         QWidget
+//     QPixmap pixmap1 = eventManager->pieChartView
+//                           ->grab(); // myWidget is a pointer to any QWidget
+//                                     //
+//
+//        int width_pix = pixmap0.width() + pixmap1.width();
+//     int height_pix = qMax(pixmap0.height(), pixmap1.height());
+//
+//     // Create new pixmap and painter
+//     QPixmap combined(width_pix, height_pix);
+//     combined.fill(Qt::transparent); // Optional: fill background if needed
+//
+//     QPainter painter(&combined);
+//     painter.drawPixmap(0, 0, pixmap0);
+//     painter.drawPixmap(pixmap0.width(), 0, pixmap1);
+//     painter.end();
+//
+//
+//
+//
+//     // Save result
+//     combined.save(dstPath +
+//                  QString("e_%1_%2_graph_smooth.png").arg(example_number).arg(i));
+//     // QImage screenshot = this->grabFramebuffer();
+//     // QString filename =
+//     //     dstPath +
+//     //     QString("e_%1_%2_smooth.png").arg(example_number).arg(i);
+//     // screenshot.save(filename);
+//     //}
+//   }
+// }
