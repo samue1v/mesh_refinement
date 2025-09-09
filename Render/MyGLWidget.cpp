@@ -198,7 +198,7 @@ void MyGLWidget::mousePressEvent(QMouseEvent *evt) {
     float w = width();
     float h = height();
     scene->mousePickRight(glm::vec3(virtualPos.x(), virtualPos.y(), 0.f), w, h);
-    scene->updateText();
+    //scene->updateText();
   }
   evt->accept();
   update();

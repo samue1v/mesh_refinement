@@ -74,7 +74,7 @@ AbsFileHandler::getNumStrings() const
 GLFileHandler::GLFileHandler() {}
 
 void
-GLFileHandler::parse(GLObject* obj, int num)
+GLFileHandler::parse(GLDrawable* obj, int num)
 {
   // for(std::string s : strings){}
 }
@@ -114,7 +114,7 @@ ObjFileHandler::readFile(std::string fileSrc)
 }
 
 void
-ObjFileHandler::parse(GLObject* obj, int stringNum)
+ObjFileHandler::parse(GLDrawable* obj, int stringNum)
 {
   auto pointIndexes = obj->getLocalIndexes();
   auto points = obj->getLocalPoints();
@@ -161,7 +161,7 @@ ObjFileHandler::parse(GLObject* obj, int stringNum)
 }
 
 void
-ObjFileHandler::getL(GLObject* obj,
+ObjFileHandler::getL(GLDrawable* obj,
                      std::vector<std::pair<uint, uint>>* lines,
                      std::string str,
                      int mod)
@@ -177,7 +177,7 @@ ObjFileHandler::getL(GLObject* obj,
 }
 
 void
-ObjFileHandler::getV(GLObject* obj, std::vector<Vertex>* vec, std::string str)
+ObjFileHandler::getV(GLDrawable* obj, std::vector<Vertex>* vec, std::string str)
 {
   std::stringstream ss(str);
   std::string result = "";

@@ -9,13 +9,13 @@
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
 
-class GLObject;
+class GLDrawable;
 
 //Handler Interface
 class Handler{
   public:
   virtual Handler* setNext(Handler *) = 0;
-  virtual GLObject* handle(GLObject *) = 0;
+  virtual GLDrawable* handle(GLDrawable *) = 0;
   virtual ~Handler() = 0;
 };
 
@@ -26,7 +26,7 @@ class AbsHandler : public Handler{
   AbsHandler();
   virtual ~AbsHandler();
   Handler * setNext(Handler * _handler) override;
-  GLObject * handle(GLObject * request) override;
+  GLDrawable * handle(GLDrawable * request) override;
   
   private:
   Handler * nexthandler;
@@ -36,7 +36,7 @@ class AbsHandler : public Handler{
 class TransformationHandler : public AbsHandler{
   public:
   TransformationHandler(Matrix<float> m = Matrix<float>());
-  GLObject * handle(GLObject * request) override;
+  GLDrawable * handle(GLDrawable * request) override;
 
   protected:
   Matrix<float> transformMatrix;
@@ -45,7 +45,7 @@ class TransformationHandler : public AbsHandler{
 class PCAHandler : public TransformationHandler{
   public:
   PCAHandler(Matrix<float> m = Matrix<float>());
-  GLObject * handle(GLObject * request) override;
+  GLDrawable * handle(GLDrawable * request) override;
 
   Matrix<double> * getMean();
   Matrix<double> * getCov();
@@ -61,7 +61,7 @@ class PCAHandler : public TransformationHandler{
 class PCAInverseHandler : public TransformationHandler{
   public:
   PCAInverseHandler(PCAHandler * _pcaHandler = nullptr);
-  GLObject * handle(GLObject * request) override;
+  GLDrawable * handle(GLDrawable * request) override;
 
   private:
   PCAHandler * pcaHandler;
@@ -73,7 +73,7 @@ class RotationHandler : public TransformationHandler{
   public:
   RotationHandler(float degree = 0.f);
   RotationHandler(Matrix<float> m = Matrix<float>());
-  GLObject * handle(GLObject * request) override;
+  GLDrawable * handle(GLDrawable * request) override;
 
 
   private:
@@ -87,7 +87,7 @@ class ScaleHandler : public TransformationHandler{
   public:
   ScaleHandler(float factor = 1.f);
   ScaleHandler(Matrix<float> m = Matrix<float>());
-  GLObject * handle(GLObject * request) override;
+  GLDrawable * handle(GLDrawable * request) override;
 
 
   private:
@@ -100,14 +100,14 @@ class NormalizationHandler : public TransformationHandler{
 
   public:
   NormalizationHandler();
-  GLObject * handle(GLObject * request) override;
+  GLDrawable * handle(GLDrawable * request) override;
 };
 
 class TriangulationHandler : public AbsHandler{
 
   public:
-  GLObject * handle(GLObject * request) override;
-  void makeTriangulation(GLObject * obj);
+  GLDrawable * handle(GLDrawable * request) override;
+  void makeTriangulation(GLDrawable * obj);
 
   private:
   void check(const std::pair<uint,uint> & edge);
@@ -131,14 +131,14 @@ class TriangulationHandler : public AbsHandler{
   private:
   AdjList adjList;
   std::queue<std::pair<uint,uint>> queue;
-  GLObject * obj;
+  GLDrawable * obj;
 };
 
 class QuadTreeHandler : public TransformationHandler{
 
   public:
   QuadTreeHandler();
-  GLObject * handle(GLObject * request) override;
+  GLDrawable * handle(GLDrawable * request) override;
 };
 
 #endif

@@ -16,8 +16,8 @@ Scene::Scene(MyGLWidget *glw, QOpenGLContext *context,
     objects.push_back(h);
   }
   currentObj = objects.at(0);
-  textRenderer = new TextRender(this, context);
-  textRenderer->init();
+  // textRenderer = new TextRender(this, context);
+  // textRenderer->init();
   // updateText();
 }
 
@@ -25,10 +25,10 @@ Scene::~Scene() {
   if (f != nullptr) {
     delete f;
   }
-  for (GLObject *o : objects) {
+  for (GLDrawable *o : objects) {
     delete o;
   }
-  delete textRenderer;
+  //delete textRenderer;
 }
 
 Camera *Scene::getCamera() { return camera; }
@@ -47,7 +47,7 @@ void Scene::addObject(std::string objSrc) {
 
 void Scene::removeObject(std::string name) {
   for (int i = 0; i < objects.size(); i++) {
-    GLObject *o = objects.at(i);
+    GLTriMesh *o = objects.at(i);
     if (o->name == name) {
       objects.erase(objects.begin() + i);
     }
@@ -117,12 +117,12 @@ int Scene::addVertex(Vertex p) {
 }
 
 void Scene::render() {
-  for (GLObject *obj : objects) {
+  for (GLTriMesh *obj : objects) {
     if (obj->isVisible()) {
       obj->draw();
     }
   }
-  textRenderer->draw();
+  //textRenderer->draw();
 }
 
 void Scene::w_press() { camera->walkFront(); }
@@ -144,32 +144,34 @@ void Scene::scrollUp() { camera->zoomIn(); }
 void Scene::scrollDown() { camera->zoomOut(); }
 
 void Scene::left_press(int step) {
-  for (GLObject *o : objects) {
+  for (GLTriMesh *o : objects) {
     if (o->isVisible()) {
       for (int i = 0; i < step; i++) {
-        if (o->previousFrame()) {
-          glWidget->notifyPrevious();
-        }
+        //if (o->previousFrame()) {
+        //  glWidget->notifyPrevious();
+        //}
+        o->previousFrame();
       }
     }
   }
 }
 
 void Scene::right_press(int step) {
-  for (GLObject *o : objects) {
+  for (GLTriMesh *o : objects) {
     if (o->isVisible()) {
       for (int i = 0; i < step; i++) {
-        if (o->nextFrame()) {
-          float score = o->getCurrentTriangle().classify();
-          glWidget->notifyNext(score);
-        }
+        //if (o->nextFrame()) {
+        //  float score = o->getCurrentTriangle().classify();
+        //  glWidget->notifyNext(score);
+        //}
+        o->nextFrame();
       }
     }
   }
 }
 
 void Scene::v_press() {
-  for (GLObject *obj : objects) {
+  for (GLTriMesh *obj : objects) {
     HandObject *o = dynamic_cast<HandObject *>(obj);
     if (o != nullptr) {
       o->setQuadVisible();
@@ -204,7 +206,7 @@ std::pair<int, Triangle> Scene::mousePickLeft(glm::vec3 virtualPos, int width,
   pos.y *= pos.w;
   pos.z *= pos.w;
 
-  for (GLObject *o : objects) {
+  for (GLTriMesh *o : objects) {
     if (o->isVisible()) {
       int idx = o->pickTriangle(glm::vec3(pos));
       if (idx > -1) {
@@ -237,16 +239,16 @@ void Scene::mousePickRight(glm::vec3 virtualPos, int width, int height) {
   pos.y *= pos.w;
   pos.z *= pos.w;
 
-  for (GLObject *o : objects) {
+  for (GLTriMesh *o : objects) {
     if (o->isVisible()) {
-      for (int i = 0; i < o->getLocalPoints()->size(); i++) {
+      for (int i = 0; i < o->getPoints()->size(); i++) {
         float dist =
             glm::length(glm::vec2(pos.x, pos.y) -
-                        glm::vec2(o->getLocalPoints()->at(i).position.x,
-                                  o->getLocalPoints()->at(i).position.y));
+                        glm::vec2(o->getPoints()->at(i).position.x,
+                                  o->getPoints()->at(i).position.y));
         if (dist < 0.00031f) {
-          o->getLocalPoints()->at(i).isActive =
-              (o->getLocalPoints()->at(i).isActive + 1) % 2;
+          o->getPoints()->at(i).isActive =
+              (o->getPoints()->at(i).isActive + 1) % 2;
         }
       }
     }
@@ -270,21 +272,21 @@ Vertex Scene::getVertexFromIndex(uint idx) {
 
 std::vector<Vertex> *Scene::getScenePoints() { return &scenePoints; }
 
-void Scene::updateText() {
-  textRenderer->clearTextList();
-  for (HandObject *ho : objects) {
-    if (ho->isVisible()) {
-      for (int i = 0; i < ho->getLocalPoints()->size(); i++) {
-        Vertex v = ho->getLocalPoints()->at(i);
-        if (v.isActive) {
-          float x = v.position.x;
-          float y = v.position.y;
-          textRenderer->addText("([" + std::to_string(i) + "], " +
-                                    std::format("{:.3f}", x) + ", " +
-                                    std::format("{:.3f}", y) + ")",
-                                x, y, 0.0006f, glm::vec3(0.f, 0.f, 1.f));
-        }
-      }
-    }
-  }
-}
+//void Scene::updateText() {
+//  textRenderer->clearTextList();
+//  for (HandObject *ho : objects) {
+//    if (ho->isVisible()) {
+//      for (int i = 0; i < ho->getLocalPoints()->size(); i++) {
+//        Vertex v = ho->getLocalPoints()->at(i);
+//        if (v.isActive) {
+//          float x = v.position.x;
+//          float y = v.position.y;
+//          textRenderer->addText("([" + std::to_string(i) + "], " +
+//                                    std::format("{:.3f}", x) + ", " +
+//                                    std::format("{:.3f}", y) + ")",
+//                                x, y, 0.0006f, glm::vec3(0.f, 0.f, 1.f));
+//        }
+//      }
+//    }
+//  }
+//}

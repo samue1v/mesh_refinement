@@ -20,7 +20,7 @@ void HandObject::init() {
   // PASSAR O PARSING PARA ESSA CLASSE E CONTINUAR O RESTO...(feito)
   // Colocar, no inicio de init, a chamada de execHandlers...(feito)
   Frame firstframe = Frame(
-      {0, localPoints.size(), 0, lines.size(), 0, 0, glm::vec3(0, 0, 0), 0});
+      {0, points.size(), 0, lines.size(), 0, 0, glm::vec3(0, 0, 0), 0});
   frames.push_back(firstframe);
 
   // tree->initQuadTree();
@@ -67,7 +67,7 @@ void HandObject::init() {
   // Points initialization, index 0
 
   std::vector<std::pair<glm::vec3, glm::vec3>> vertexBufferPoints;
-  for (Vertex &v : localPoints) {
+  for (Vertex &v : points) {
     // vertexBufferPoints.push_back({v.position,v.color});
     vertexBufferPoints.push_back({v.position, {1.f, 0.f, 0.f}});
   }
@@ -86,8 +86,8 @@ void HandObject::init() {
   // f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint) *
   // sourceFilePointsSize, localPointIndexes.data(),GL_DYNAMIC_DRAW);
   f->glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                  sizeof(uint) * localPointIndexes.size(),
-                  localPointIndexes.data(), GL_DYNAMIC_DRAW);
+                  sizeof(uint) * indexes.size(),
+                  indexes.data(), GL_DYNAMIC_DRAW);
 
   GLint point_position_attribute =
       f->glGetAttribLocation(program[0].getProgramId(), "position");
@@ -270,8 +270,8 @@ void HandObject::draw() {
   //????
   // f->glDrawElements(GL_POINTS,pointsCount,GL_UNSIGNED_INT,localPointIndexes.data()
   // + frames[currentFrame].PointBegin*sizeof(uint));
-  f->glDrawElements(GL_POINTS, localPointIndexes.size(), GL_UNSIGNED_INT,
-                    localPointIndexes.data());
+  f->glDrawElements(GL_POINTS, indexes.size(), GL_UNSIGNED_INT,
+                    indexes.data());
 
   f->glBindVertexArray(0);
 

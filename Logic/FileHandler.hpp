@@ -15,7 +15,7 @@ public:
 };
 
 
-class GLObject;
+class GLDrawable;
 class Vertex;
 
 
@@ -44,7 +44,7 @@ class GLFileHandler : public AbsFileHandler{
 public:
   GLFileHandler();
   ~GLFileHandler() = default;
-  virtual void parse(GLObject * obj,int num);
+  virtual void parse(GLDrawable * obj,int num);
 };
 
 class ObjFileHandler : public GLFileHandler{
@@ -53,11 +53,11 @@ public:
   ~ObjFileHandler() = default;
 
   void readFile(std::string file = "") override;
-  void parse(GLObject * obj,int num);
+  void parse(GLDrawable * obj,int num);
 
 private:
-  void getL(GLObject * obj,std::vector<std::pair<uint, uint>> *lines, std::string str, int mod);
-  void getV(GLObject * obj,std::vector<Vertex> *vec, std::string str);
+  void getL(GLDrawable* obj,std::vector<std::pair<uint, uint>> *lines, std::string str, int mod);
+  void getV(GLDrawable* obj,std::vector<Vertex> *vec, std::string str);
 }; 
 
 //class JmeshFileAdapter : public GLFileHandler{

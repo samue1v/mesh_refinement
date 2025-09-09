@@ -1,11 +1,6 @@
 #include "QuadTree.hpp"
 #include "Scene.hpp"
 
-bool randomBool() {
-    static auto gen = std::bind(std::uniform_int_distribution<>(0,1),std::default_random_engine());
-    return gen();
-}
-
 Square::Square(){
   points.reserve(4);
   points.resize(4);
@@ -113,7 +108,7 @@ int Node::getSeq(){
   return seq;
 }
 
-QuadTree::QuadTree(QOpenGLContext * _context,GLDrawable * _glObj,int _depth) : GLDrawable::GLDrawable(_glObj->getScene(),_context),glObj(_glObj), depth(_depth), rootNode(nullptr){
+QuadTree::QuadTree(QOpenGLContext * _context,GLSimpleMesh * _glObj,int _depth) : GLSimpleMesh::GLSimpleMesh(_context, _glObj->currentScene), glObj(_glObj), depth(_depth), rootNode(nullptr){
 
 }
 
@@ -134,10 +129,6 @@ void QuadTree::getMaxDimensionAndCenter(float * dmax, glm::vec3 * center){
 
 void QuadTree::init(){
 //TODO
-  //PASSAR O PARSING PARA ESSA CLASSE E CONTINUAR O RESTO...(feito)
-  //Colocar, no inicio de init, a chamada de execHandlers...(feito)
-  Frame firstframe = Frame({0,localPoints.size(),0,lines.size(),0,0,glm::vec3(0,0,0),0});
-  frames.push_back(firstframe);
 
   //pontos,linhas, triangulo e circulo...
   VAO.reserve(1);
@@ -165,23 +156,29 @@ void QuadTree::init(){
   //program[0].createShaderFromFile("fill_vertex.vert","fill_frag.frag");
   program[0].createShaderFromFile("quad_vertex.vert","quad_frag.frag");
   //Points initialization, index 0
+  //
+
+  std::vector<std::pair<glm::vec3, glm::vec3>> vertexBufferPoints;
+  for(Vertex & v: points){
+    vertexBufferPoints.push_back({v.position,v.color});
+  }
 
   f->glBindVertexArray(VAO[0]);
   
   f->glBindBuffer(GL_ARRAY_BUFFER,VBO[0]);
-  f->glBufferData(GL_ARRAY_BUFFER,sizeof(Vertex) * localPoints.size(), localPoints.data(),GL_DYNAMIC_DRAW);
+  f->glBufferData(GL_ARRAY_BUFFER,sizeof(std::pair<glm::vec3,glm::vec3>) * vertexBufferPoints.size(), vertexBufferPoints.data(),GL_DYNAMIC_DRAW);
 
 
 
 
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
-  f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint) * localPointIndexes.size(),  localPointIndexes.data(),GL_DYNAMIC_DRAW);
+  f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint) * indexes.size(),  indexes.data(),GL_DYNAMIC_DRAW);
 
 
   GLint point_position_attribute = f->glGetAttribLocation(program[0].getProgramId(), "position");
   GLint point_color_attribute = f->glGetAttribLocation(program[0].getProgramId(), "color_a");
-  f->glVertexAttribPointer(point_position_attribute,3,GL_FLOAT,GL_FALSE,sizeof(Vertex),0);
-  f->glVertexAttribPointer(point_color_attribute,3,GL_FLOAT,GL_FALSE,sizeof(Vertex),(void *)(sizeof(glm::vec3)));
+  f->glVertexAttribPointer(point_position_attribute,3,GL_FLOAT,GL_FALSE,sizeof(std::pair<glm::vec3, glm::vec3>),0);
+  f->glVertexAttribPointer(point_color_attribute,3,GL_FLOAT,GL_FALSE,sizeof(std::pair<glm::vec3, glm::vec3>),(void *)(sizeof(glm::vec3)));
 
   f->glEnableVertexAttribArray(point_position_attribute);
   f->glEnableVertexAttribArray(point_color_attribute);
@@ -225,7 +222,7 @@ void QuadTree::draw(){
   //f->glUseProgram(program[0].getProgramId());
   f->glUseProgram(program[0].getProgramId());
   //????
-  f->glDrawElements(GL_QUADS,localPointIndexes.size(),GL_UNSIGNED_INT,localPointIndexes.data());
+  f->glDrawElements(GL_QUADS,indexes.size(),GL_UNSIGNED_INT,indexes.data());
 
 
   f->glBindVertexArray(0);
@@ -322,10 +319,10 @@ void QuadTree::divideBox(const glm::vec3 &TL, const glm::vec3 &BR, glm::vec3 &ne
 
 void QuadTree::fillRenderDataRec(Node * root){
   
-  localPoints.push_back(root->getSquare()->getPoint(PointLabel::TL));
-  localPoints.push_back(root->getSquare()->getPoint(PointLabel::TR));
-  localPoints.push_back(root->getSquare()->getPoint(PointLabel::BR));
-  localPoints.push_back(root->getSquare()->getPoint(PointLabel::BL));
+  points.push_back(root->getSquare()->getPoint(PointLabel::TL));
+  points.push_back(root->getSquare()->getPoint(PointLabel::TR));
+  points.push_back(root->getSquare()->getPoint(PointLabel::BR));
+  points.push_back(root->getSquare()->getPoint(PointLabel::BL));
 
   if(root->getStatus() == NodeType::Leaf){
     return;
@@ -344,14 +341,14 @@ void QuadTree::fillRenderData(Node * node){
   //  glm::vec3 v3 = v.position;
   //  std::cout << "(" << v3.x <<","<<v3.y<<")"<<"\n";
   //}
-  localPointIndexes.reserve(localPoints.size());
-  localPointIndexes.resize(localPoints.size());
-  std::iota(localPointIndexes.begin(),localPointIndexes.end(),0);
+  indexes.reserve(points.size());
+  indexes.resize(points.size());
+  std::iota(indexes.begin(), indexes.end(),0);
 }
 
 bool QuadTree::classify(Node * node){
   float sqLen = node->getSquare()->getPoint(PointLabel::TR).position.x - node->getSquare()->getPoint(PointLabel::TL).position.x;
-  std::vector<Vertex> * points = glObj->getLocalPoints();
+  std::vector<Vertex> * points = glObj->getPoints();
   for(std::pair<uint,uint> e : *(glObj->getLines())){
     glm::vec3 middlePoint = Misc::Util::edgeMiddle(points->at(e.first).position,points->at(e.second).position);
     if(node->isPointInside(middlePoint)){

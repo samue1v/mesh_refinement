@@ -11,13 +11,100 @@ GLDrawable::GLDrawable(QOpenGLContext *context = nullptr) : visibility(true) {
   }
 }
 
-
 bool GLDrawable::isVisible() { return visibility; }
-
 
 void GLDrawable::setVisible(const bool vis) { visibility = vis; }
 
-GLSimpleMesh::GLSimpleMesh(QOpenGLContext *context = 0) : GLDrawable(context) {}
+GLSimpleMesh::GLSimpleMesh(QOpenGLContext *context = 0, Scene * _currentScene = 0) : GLDrawable(context), currentScene(_currentScene)  {}
+
+std::vector<Vertex> *GLSimpleMesh::getPoints() { return &points; }
+
+std::vector<uint> *GLSimpleMesh::getIndexes() { return &indexes; }
+
+std::vector<std::pair<uint, uint>> *GLSimpleMesh::getLines() { return &lines; }
+
+glm::vec3 GLSimpleMesh::getCenter() {
+  glm::vec3 res({0.f, 0.f, 0.f});
+  glm::vec3 maxV = maxValAxis();
+  glm::vec3 minV = minValAxis();
+  glm::vec3 dif = (maxV - minV);
+  res[0] = minV[0] + dif[0] / 2.f;
+  res[1] = minV[1] + dif[1] / 2.f;
+  return res;
+}
+
+glm::vec3 GLSimpleMesh::maxValAxis() {
+  float maxFloat = 2e22;
+  glm::vec3 max({-maxFloat, -maxFloat, -maxFloat});
+  for (Vertex v : points) {
+    glm::vec3 p = v.position;
+    for (int i = 0; i < 3; i++) {
+      if (p[i] > max[i]) {
+        max[i] = p[i];
+      }
+    }
+  }
+
+  return max;
+}
+
+glm::vec3 GLSimpleMesh::minValAxis() {
+  float maxFloat = 2e22;
+  glm::vec3 min({maxFloat, maxFloat, maxFloat});
+  for (Vertex v : points) {
+    glm::vec3 p = v.position;
+    for (int i = 0; i < 3; i++) {
+      if (p[i] < min[i]) {
+        min[i] = p[i];
+      }
+    }
+  }
+
+  return min;
+}
+
+void GLSimpleMesh::addNewVertex(glm::vec3 pos, glm::vec3 color, bool isActive) {
+  Vertex newVertex = {pos, color, isActive};
+  points.push_back(newVertex);
+  uint newIdx = indexes.size();
+  indexes.push_back(newIdx);
+}
+
+bool GLSimpleMesh::isPointInside(glm::vec3 p) {
+
+  glm::vec3 global_min = minValAxis();
+  glm::vec3 global_max = maxValAxis();
+
+  glm::vec3 res = global_max - global_min;
+  float dmax = std::max({res.x, res.y, res.z});
+  std::vector<glm::vec3> limitPoints;
+  glm::vec3 p_right({p.x + dmax + 1, p.y, p.z});
+  glm::vec3 p_down({p.x, p.y - dmax - 1, p.z});
+  glm::vec3 p_left({p.x - dmax - 1, p.y, p.z});
+  glm::vec3 p_up({p.x, p.y + dmax + 1, p.z});
+
+  limitPoints.push_back(p_right);
+  limitPoints.push_back(p_down);
+  limitPoints.push_back(p_left);
+  limitPoints.push_back(p_up);
+
+  for (glm::vec3 lp : limitPoints) {
+    int intersect = 0;
+    for (int i = 0; i < sourceFileLinesSize; i++) {
+      std::pair<uint, uint> curEdge = lines.at(i);
+      if (Misc::Util::doIntersect(p, lp, points.at(curEdge.first).position,
+                                  points.at(curEdge.second).position)) {
+        intersect += 1;
+        // break;
+      }
+    }
+    if (intersect % 2 == 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 void GLSimpleMesh::init() {
 
@@ -43,9 +130,8 @@ void GLSimpleMesh::init() {
   program[0].createShaderFromFile("fill_vertex.vert", "fill_frag.frag");
 
   std::vector<std::pair<glm::vec3, glm::vec3>> vertexBufferPoints;
-  for (std::pair<glm::vec3,glm::vec3> &v : points) {
-    // vertexBufferPoints.push_back({v.position,v.color});
-    vertexBufferPoints.push_back(v);
+  for (Vertex &v : points) {
+    vertexBufferPoints.push_back({v.position, v.color});
   }
 
   f->glBindVertexArray(VAO[0]);
@@ -53,12 +139,11 @@ void GLSimpleMesh::init() {
   f->glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
   f->glBufferData(GL_ARRAY_BUFFER,
                   sizeof(std::pair<glm::vec3, glm::vec3>) *
-                      points.size(),
-                  points.data(), GL_DYNAMIC_DRAW);
+                      vertexBufferPoints.size(),
+                  vertexBufferPoints.data(), GL_DYNAMIC_DRAW);
 
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
-  f->glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                  sizeof(uint) * indexes.size(),
+  f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint) * indexes.size(),
                   indexes.data(), GL_DYNAMIC_DRAW);
 
   GLint point_position_attribute =
@@ -105,10 +190,8 @@ void GLSimpleMesh::draw() {
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-
-
 GLTriMesh::GLTriMesh(Scene *scene, QOpenGLContext *context)
-    : GLDrawable(context), currentScene(scene), baseHandler(nullptr) {}
+    : GLSimpleMesh(context, scene), baseHandler(nullptr) {}
 
 GLTriMesh::~GLTriMesh() { delete baseHandler; }
 
@@ -116,11 +199,7 @@ void GLTriMesh::init() {}
 
 void GLTriMesh::draw() {}
 
-std::vector<Vertex> *GLTriMesh::getLocalPoints() { return &localPoints; }
-
 std::vector<Triangle> *GLTriMesh::getTriangles() { return &triangles; }
-
-std::vector<std::pair<uint, uint>> *GLTriMesh::getLines() { return &lines; }
 
 void GLTriMesh::addFrame(Frame f) { frames.push_back(f); }
 
@@ -182,8 +261,6 @@ void GLTriMesh::execHandlers() {
   }
 }
 
-
-
 void GLTriMesh::restoreOriginal() { currentFrame = 0; }
 
 // get scene index from vertex v
@@ -202,89 +279,4 @@ uint GLTriMesh::addVertexToScene(Vertex v) {
   return idx;
 }
 
-std::vector<uint> *GLTriMesh::getLocalIndexes() { return &localPointIndexes; }
-
-glm::vec3 GLTriMesh::getCenter() {
-  glm::vec3 res({0.f, 0.f, 0.f});
-  glm::vec3 maxV = maxValAxis();
-  glm::vec3 minV = minValAxis();
-  glm::vec3 dif = (maxV - minV);
-  res[0] = minV[0] + dif[0] / 2.f;
-  res[1] = minV[1] + dif[1] / 2.f;
-  return res;
-}
-
-glm::vec3 GLTriMesh::maxValAxis() {
-  float maxFloat = 2e22;
-  glm::vec3 max({-maxFloat, -maxFloat, -maxFloat});
-  for (Vertex v : localPoints) {
-    glm::vec3 p = v.position;
-    for (int i = 0; i < 3; i++) {
-      if (p[i] > max[i]) {
-        max[i] = p[i];
-      }
-    }
-  }
-
-  return max;
-}
-
-glm::vec3 GLTriMesh::minValAxis() {
-  float maxFloat = 2e22;
-  glm::vec3 min({maxFloat, maxFloat, maxFloat});
-  for (Vertex v : localPoints) {
-    glm::vec3 p = v.position;
-    for (int i = 0; i < 3; i++) {
-      if (p[i] < min[i]) {
-        min[i] = p[i];
-      }
-    }
-  }
-
-  return min;
-}
-
 Scene *GLTriMesh::getScene() { return currentScene; }
-
-void GLTriMesh::addNewVertex(glm::vec3 pos, glm::vec3 color, bool isActive) {
-  Vertex newVertex = {pos, color, isActive};
-  localPoints.push_back(newVertex);
-  uint newIdx = localPointIndexes.size();
-  localPointIndexes.push_back(newIdx);
-}
-
-bool GLTriMesh::isPointInside(glm::vec3 p) {
-
-  glm::vec3 global_min = minValAxis();
-  glm::vec3 global_max = maxValAxis();
-
-  glm::vec3 res = global_max - global_min;
-  float dmax = std::max({res.x, res.y, res.z});
-  std::vector<glm::vec3> limitPoints;
-  glm::vec3 p_right({p.x + dmax + 1, p.y, p.z});
-  glm::vec3 p_down({p.x, p.y - dmax - 1, p.z});
-  glm::vec3 p_left({p.x - dmax - 1, p.y, p.z});
-  glm::vec3 p_up({p.x, p.y + dmax + 1, p.z});
-
-  limitPoints.push_back(p_right);
-  limitPoints.push_back(p_down);
-  limitPoints.push_back(p_left);
-  limitPoints.push_back(p_up);
-
-  for (glm::vec3 lp : limitPoints) {
-    int intersect = 0;
-    for (int i = 0; i < sourceFileLinesSize; i++) {
-      std::pair<uint, uint> curEdge = lines.at(i);
-      if (Misc::Util::doIntersect(p, lp, localPoints.at(curEdge.first).position,
-                                  localPoints.at(curEdge.second).position)) {
-        intersect += 1;
-        // break;
-      }
-    }
-    if (intersect % 2 == 0) {
-      return false;
-    }
-  }
-
-  return true;
-}

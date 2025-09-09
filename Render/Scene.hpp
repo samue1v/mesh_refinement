@@ -63,7 +63,7 @@ public:
   void increaseSpeed();
   void decreaseSpeed();
   int getNumObjects();
-  void updateText();
+  //void updateText();
   Camera *getCamera();
   std::vector<Vertex> *getScenePoints();
   int getIndexFromVertex(Vertex v);

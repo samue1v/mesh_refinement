@@ -48,14 +48,13 @@ protected:
   std::vector<uint> VAO;
   std::vector<uint> EBO;
   bool visibility;
-
 };
 
 // Simple mesh interface for primitives and simple objects.
-class GLSimpleMesh : public GLDrawable{
+class GLSimpleMesh : public GLDrawable {
 public:
-  GLSimpleMesh(QOpenGLContext *context);
-  GLSimpleMesh(const GLSimpleMesh &copyObj) = delete ;
+  GLSimpleMesh(QOpenGLContext *context, Scene *_scene);
+  GLSimpleMesh(const GLSimpleMesh &copyObj) = delete;
   GLSimpleMesh(GLSimpleMesh &&other) = delete;
   ~GLSimpleMesh() = default;
   virtual void draw();
@@ -64,18 +63,43 @@ public:
   GLSimpleMesh &operator=(GLSimpleMesh &&other) = delete;
   GLSimpleMesh &operator=(const GLSimpleMesh &copyObj) = delete;
 
-public:
-  std::vector<std::pair<glm::vec3,glm::vec3>> points;
-  std::vector<uint32_t> indexes;
+  void addNewVertex(glm::vec3 pos, glm::vec3 color, bool isActive);
 
+  bool isPointInside(glm::vec3 p);
+
+  std::vector<Vertex> *getPoints();
+
+  std::vector<uint> *getIndexes();
+
+  std::vector<std::pair<uint, uint>> *getLines();
+
+  glm::vec3 getCenter();
+
+  glm::vec3 maxValAxis();
+
+  glm::vec3 minValAxis();
+
+public:
+  std::vector<Vertex> points;
+  std::vector<uint32_t> indexes;
+  std::vector<std::pair<uint, uint>> lines;
+
+public:
+  int sourceFilePointsSize;
+  int sourceFileLinesSize;
+  int sourceFileTrianglesSize;
+
+  std::string name;
+
+  Scene *currentScene;
 };
 
 // Mesh interface for scene and complex algortihms
-class GLTriMesh : public GLDrawable {
+class GLTriMesh : public GLSimpleMesh {
 public:
   GLTriMesh(Scene *scene, QOpenGLContext *context);
   ~GLTriMesh();
-  GLTriMesh(const GLTriMesh &copyObj) = delete ;
+  GLTriMesh(const GLTriMesh &copyObj) = delete;
   GLTriMesh(GLTriMesh &&other) = delete;
 
   virtual void draw();
@@ -85,22 +109,10 @@ public:
   GLTriMesh &operator=(GLTriMesh &&other) = delete;
   GLTriMesh &operator=(const GLTriMesh &copyObj) = delete;
 
-
-
 public:
-  void addNewVertex(glm::vec3 pos, glm::vec3 color, bool isActive);
-
-  bool isPointInside(glm::vec3 p);
-
   void execHandlers();
 
-  std::vector<Vertex> *getLocalPoints();
-
   std::vector<Triangle> *getTriangles();
-
-  std::vector<std::pair<uint, uint>> *getLines();
-
-  std::vector<uint> *getLocalIndexes();
 
   void addFrame(Frame f);
 
@@ -124,43 +136,20 @@ public:
 
   int pickTriangle(glm::vec3 point);
 
-
-
   int getGlobalIndexFromVertex(Vertex v);
-
-  glm::vec3 getCenter();
-
-  glm::vec3 maxValAxis();
-
-  glm::vec3 minValAxis();
 
   // Vertex getGlobalVertexFromIndex(uint idx);
 
   uint addVertexToScene(Vertex v);
 
-public:
-  int sourceFilePointsSize;
-  int sourceFileLinesSize;
-  int sourceFileTrianglesSize;
-
-  std::string name;
-
 protected:
-  std::vector<Vertex> localPoints;
-  // indexes of global(Scene) points
-  std::vector<std::pair<uint, uint>> lines;
   // triangle vector
   std::vector<Triangle> triangles;
-  // std::vector<uint> pointIndexes;
-  std::vector<uint> localPointIndexes;
   std::vector<Frame> frames;
 
   AbsHandler *baseHandler;
 
   int currentFrame;
-
-
-  Scene *currentScene;
 };
 
 #endif
