@@ -54,7 +54,7 @@ void Scene::removeObject(std::string name) {
   }
 }
 
-void Scene::setVisible(std::string s, int transformType) {
+void Scene::setVisible(std::string s) {
   for (HandObject *obj : objects) {
     if (obj->name == s || s == "All") {
       obj->restoreOriginal();

@@ -46,7 +46,7 @@ qt_add_executable(hand main.cpp
                   External/imgui/imgui_draw.cpp
                   External/imgui/imgui_tables.cpp
                   External/imgui/imgui_widgets.cpp
-                  External/imgui/backends/imgui_impl_opengl3.h
+                  External/imgui/backends/imgui_impl_opengl3.cpp
 )
 
 target_link_libraries(hand PRIVATE Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Charts Qt6::OpenGLWidgets Qt6::PrintSupport ${FREETYPE_LIBRARIES})

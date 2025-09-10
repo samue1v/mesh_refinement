@@ -11,6 +11,10 @@ GLDrawable::GLDrawable(QOpenGLContext *context = nullptr) : visibility(true) {
   }
 }
 
+GLDrawable::~GLDrawable(){
+  delete f;
+}
+
 bool GLDrawable::isVisible() { return visibility; }
 
 void GLDrawable::setVisible(const bool vis) { visibility = vis; }

@@ -1,8 +1,9 @@
 #include "MainWidget.hpp"
 #include "../Render/MyGLWidget.hpp"
 
-MainWidget::MainWidget(MyGLWidget *_glWidget) : glWidget(_glWidget) {
-  f = glWidget->f;
+MainWidget::MainWidget(MyGLWidget *_glWidget, QOpenGLContext *context)
+    : GLDrawable(context), glWidget(_glWidget) {
+  init();
 }
 
 MainWidget::~MainWidget() {
@@ -12,16 +13,7 @@ MainWidget::~MainWidget() {
   }
 }
 
-void MainWidget::init() {
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
-
-  ImGui::StyleColorsDark();
-
-  ImGui_ImplOpenGL3_Init("#version 330");
-}
+void MainWidget::init() {}
 
 void MainWidget::render() { this->draw(); }
 
@@ -69,7 +61,11 @@ int MainWidget::getSmoothStep() {
 
 void MainWidget::objListChosen(std::string name) {
   notifyClear();
-  glWidget->setVisibleObjects(name, sideMenu->getPCAVal());
+  glWidget->setVisibleObjects(name);
 }
 
-AbsHandler *MainWidget::buildHandlers() { return nullptr; }
+void MainWidget::draw() {
+  ImGui::Begin("My Window");
+  ImGui::Text("Hello world");
+  ImGui::End();
+}

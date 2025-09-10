@@ -42,7 +42,7 @@ public:
   ~Scene();
   void addObject(std::string src);
   void removeObject(std::string name);
-  void setVisible(std::string s, int transformType);
+  void setVisible(std::string s);
   void render();
   int addVertex(Vertex p);
   void w_press();

@@ -36,7 +36,7 @@ public:
   void resizeGL(int w, int h) override;
   Scene *getScene();
   void createScene(MenuCommands::CreateSceneCMD &scene_cmd);
-  void setVisibleObjects(std::string name, int transformType);
+  void setVisibleObjects(std::string name);
   void updateWidget();
 
   // private:

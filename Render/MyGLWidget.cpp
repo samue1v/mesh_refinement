@@ -2,12 +2,13 @@
 #include <iostream>
 #include <unistd.h>
 MyGLWidget::MyGLWidget(QWidget *parent) {
+  setFixedSize(1280, 960);
   setFocusPolicy(Qt::ClickFocus);
   setContentsMargins(5, 5, 5, 5);
   info = new InfoBox(this);
   scene = nullptr;
   f = nullptr;
-  mainMenu = new MainWidget(this);
+  show();
 }
 
 MyGLWidget::~MyGLWidget() {
@@ -45,12 +46,35 @@ void MyGLWidget::initializeGL() {
 
   f->glClearColor(255.0, 255.0, 255.0, 1.0f);
 
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+
+  ImGui::StyleColorsDark();
+
+  ImGui_ImplOpenGL3_Init("#version 330");
+
+  mainMenu = new MainWidget(this, context());
+
   // widgetToPhoto();
 }
 
 void MyGLWidget::paintGL() {
+  if (width() <= 0 || height() <= 0)
+    return;
+
+  ImGuiIO &io = ImGui::GetIO();
+  io.DisplaySize = ImVec2((float)width(), (float)height());
+
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui::NewFrame();
+
   f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   mainMenu->render();
+
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
   if (scene != nullptr) {
     scene->render();
   }
@@ -198,15 +222,15 @@ void MyGLWidget::mousePressEvent(QMouseEvent *evt) {
     float w = width();
     float h = height();
     scene->mousePickRight(glm::vec3(virtualPos.x(), virtualPos.y(), 0.f), w, h);
-    //scene->updateText();
+    // scene->updateText();
   }
   evt->accept();
   update();
   doneCurrent();
 }
 
-void MyGLWidget::setVisibleObjects(std::string name, int transformType) {
-  scene->setVisible(name, transformType);
+void MyGLWidget::setVisibleObjects(std::string name) {
+  scene->setVisible(name);
   updateWidget();
 }
 
