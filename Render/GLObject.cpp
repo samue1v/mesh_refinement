@@ -15,11 +15,15 @@ bool GLDrawable::isVisible() { return visibility; }
 
 void GLDrawable::setVisible(const bool vis) { visibility = vis; }
 
-GLSimpleMesh::GLSimpleMesh(QOpenGLContext *context = 0, Scene * _currentScene = 0) : GLDrawable(context), currentScene(_currentScene)  {}
+GLSimpleMesh::GLSimpleMesh(QOpenGLContext *context = 0,
+                           Scene *_currentScene = 0)
+    : GLDrawable(context), baseHandler(nullptr), currentScene(_currentScene) {}
 
 std::vector<Vertex> *GLSimpleMesh::getPoints() { return &points; }
 
 std::vector<uint> *GLSimpleMesh::getIndexes() { return &indexes; }
+
+std::vector<Triangle> *GLSimpleMesh::getTriangles() { return &triangles; }
 
 std::vector<std::pair<uint, uint>> *GLSimpleMesh::getLines() { return &lines; }
 
@@ -104,6 +108,18 @@ bool GLSimpleMesh::isPointInside(glm::vec3 p) {
   }
 
   return true;
+}
+
+AbsHandler *GLSimpleMesh::getBaseHandler() { return baseHandler; }
+
+void GLSimpleMesh::setbaseHandler(AbsHandler *newHandler) {
+  baseHandler = newHandler;
+}
+
+void GLSimpleMesh::execHandlers() {
+  if (baseHandler != nullptr) {
+    baseHandler->handle(this);
+  }
 }
 
 void GLSimpleMesh::init() {
@@ -191,15 +207,13 @@ void GLSimpleMesh::draw() {
 }
 
 GLTriMesh::GLTriMesh(Scene *scene, QOpenGLContext *context)
-    : GLSimpleMesh(context, scene), baseHandler(nullptr) {}
+    : GLSimpleMesh(context, scene) {}
 
 GLTriMesh::~GLTriMesh() { delete baseHandler; }
 
 void GLTriMesh::init() {}
 
 void GLTriMesh::draw() {}
-
-std::vector<Triangle> *GLTriMesh::getTriangles() { return &triangles; }
 
 void GLTriMesh::addFrame(Frame f) { frames.push_back(f); }
 
@@ -229,12 +243,6 @@ Triangle GLTriMesh::getCurrentTriangle() {
 
 int GLTriMesh::getCurrentFrame() { return currentFrame; }
 
-AbsHandler *GLTriMesh::getBaseHandler() { return baseHandler; }
-
-void GLTriMesh::setbaseHandler(AbsHandler *newHandler) {
-  baseHandler = newHandler;
-}
-
 int GLTriMesh::pickTriangle(glm::vec3 p) {
   glm::vec3 p0, p1, p2;
   bool inside = false;
@@ -253,12 +261,6 @@ int GLTriMesh::pickTriangle(glm::vec3 p) {
     }
   }
   return -1;
-}
-
-void GLTriMesh::execHandlers() {
-  if (baseHandler != nullptr) {
-    baseHandler->handle(this);
-  }
 }
 
 void GLTriMesh::restoreOriginal() { currentFrame = 0; }

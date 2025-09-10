@@ -79,10 +79,20 @@ public:
 
   glm::vec3 minValAxis();
 
+  AbsHandler *getBaseHandler();
+
+  void execHandlers();
+
+  void setbaseHandler(AbsHandler *);  
+
+  std::vector<Triangle> *getTriangles();
+
 public:
   std::vector<Vertex> points;
   std::vector<uint32_t> indexes;
   std::vector<std::pair<uint, uint>> lines;
+  std::vector<Triangle> triangles;
+  AbsHandler *baseHandler;
 
 public:
   int sourceFilePointsSize;
@@ -110,9 +120,8 @@ public:
   GLTriMesh &operator=(const GLTriMesh &copyObj) = delete;
 
 public:
-  void execHandlers();
 
-  std::vector<Triangle> *getTriangles();
+
 
   void addFrame(Frame f);
 
@@ -130,10 +139,6 @@ public:
 
   Scene *getScene();
 
-  AbsHandler *getBaseHandler();
-
-  void setbaseHandler(AbsHandler *);
-
   int pickTriangle(glm::vec3 point);
 
   int getGlobalIndexFromVertex(Vertex v);
@@ -144,10 +149,7 @@ public:
 
 protected:
   // triangle vector
-  std::vector<Triangle> triangles;
   std::vector<Frame> frames;
-
-  AbsHandler *baseHandler;
 
   int currentFrame;
 };

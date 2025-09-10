@@ -15,7 +15,7 @@ Handler *AbsHandler::setNext(Handler *_handler) {
   return _handler;
 }
 
-GLObject *AbsHandler::handle(GLObject *request) {
+GLSimpleMesh *AbsHandler::handle(GLSimpleMesh *request) {
   if (nexthandler) {
     return nexthandler->handle(request);
   }
@@ -29,9 +29,9 @@ AbsHandler::~AbsHandler() { delete nexthandler; }
 TransformationHandler::TransformationHandler(Matrix<float> m)
     : transformMatrix(m) {}
 
-GLObject *TransformationHandler::handle(GLObject *request) {
+GLSimpleMesh *TransformationHandler::handle(GLSimpleMesh *request) {
 
-  std::vector<Vertex> *points = request->getLocalPoints();
+  std::vector<Vertex> *points = request->getPoints();
   for (int i = 0; i < points->size(); i++) {
     points->at(i).position = transformMatrix * points->at(i).position;
   }
@@ -42,9 +42,9 @@ GLObject *TransformationHandler::handle(GLObject *request) {
 
 PCAHandler::PCAHandler(Matrix<float> m) : TransformationHandler(m) {}
 
-GLObject *PCAHandler::handle(GLObject *request) {
+GLSimpleMesh *PCAHandler::handle(GLSimpleMesh *request) {
 
-  std::vector<Vertex> *points = request->getLocalPoints();
+  std::vector<Vertex> *points = request->getPoints();
 
   std::vector<Matrix<double>> vec;
   for (int i = 0; i < points->size(); i++) {
@@ -85,9 +85,9 @@ std::vector<Matrix<double>> *PCAHandler::getEigen() { return &eigen; }
 PCAInverseHandler::PCAInverseHandler(PCAHandler *_pcaHandler)
     : pcaHandler(_pcaHandler) {}
 
-GLObject *PCAInverseHandler::handle(GLObject *request) {
+GLSimpleMesh *PCAInverseHandler::handle(GLSimpleMesh *request) {
 
-  std::vector<Vertex> *points = request->getLocalPoints();
+  std::vector<Vertex> *points = request->getPoints();
   std::vector<Triangle> *triangles = request->getTriangles();
   Matrix<double> *mean = pcaHandler->getMean();
 
@@ -152,8 +152,8 @@ RotationHandler::RotationHandler(float degree) {
                      cosf(radians), 0.f, 0.f, 0.f, 1.f});
 }
 
-GLObject *RotationHandler::handle(GLObject *request) {
-  std::vector<Vertex> *points = request->getLocalPoints();
+GLSimpleMesh *RotationHandler::handle(GLSimpleMesh *request) {
+  std::vector<Vertex> *points = request->getPoints();
   for (int i = 0; i < points->size(); i++) {
     points->at(i).position = transformMatrix * points->at(i).position;
   }
@@ -170,8 +170,8 @@ ScaleHandler::ScaleHandler(float factor) {
       Matrix<float>(3, 3, {factor, 0.f, 0.f, 0.f, factor, 0.f, 0.f, 0.f, 1.f});
 }
 
-GLObject *ScaleHandler::handle(GLObject *request) {
-  std::vector<Vertex> *points = request->getLocalPoints();
+GLSimpleMesh *ScaleHandler::handle(GLSimpleMesh *request) {
+  std::vector<Vertex> *points = request->getPoints();
   for (int i = 0; i < points->size(); i++) {
     points->at(i).position = transformMatrix * points->at(i).position;
   }
@@ -182,8 +182,8 @@ GLObject *ScaleHandler::handle(GLObject *request) {
 
 NormalizationHandler::NormalizationHandler() : TransformationHandler() {}
 
-GLObject *NormalizationHandler::handle(GLObject *request) {
-  std::vector<Vertex> *points = request->getLocalPoints();
+GLSimpleMesh *NormalizationHandler::handle(GLSimpleMesh *request) {
+  std::vector<Vertex> *points = request->getPoints();
   float xMax = -INFINITY;
   float yMax = -INFINITY;
   for (int i = 0; i < points->size(); i++) {
@@ -202,7 +202,7 @@ GLObject *NormalizationHandler::handle(GLObject *request) {
 
 QuadTreeHandler::QuadTreeHandler() : TransformationHandler() {}
 
-GLObject *QuadTreeHandler::handle(GLObject *request) {
+GLSimpleMesh *QuadTreeHandler::handle(GLSimpleMesh *request) {
   HandObject *h = dynamic_cast<HandObject *>(request);
   h->getQuadTree()->initQuadTree();
   h->getQuadTree()->init();
@@ -211,8 +211,8 @@ GLObject *QuadTreeHandler::handle(GLObject *request) {
 
 // TRIANGULATIONHANDLER METHODS
 
-GLObject *TriangulationHandler::handle(GLObject *request) {
-  this->obj = request;
+GLSimpleMesh *TriangulationHandler::handle(GLSimpleMesh *request) {
+  this->obj = dynamic_cast<GLTriMesh*>(request);
   std::vector<std::pair<uint, uint>> *lines = request->getLines();
   for (std::pair<uint, uint> l : *lines) {
     queue.push(l);
@@ -223,7 +223,7 @@ GLObject *TriangulationHandler::handle(GLObject *request) {
     adjList.add({lines->at(i).first, lines->at(i).second});
   }
 
-  makeTriangulation(request);
+  makeTriangulation(this->obj);
   for(int _ = 0;_<4;_++){
     smoothTriangulation();
   }
@@ -234,10 +234,10 @@ GLObject *TriangulationHandler::handle(GLObject *request) {
   return AbsHandler::handle(request);
 }
 
-void TriangulationHandler::makeTriangulation(GLObject *obj) {
+void TriangulationHandler::makeTriangulation(GLTriMesh *obj) {
   //  adiciona as arestas na fila
   // vai esvaziando a fila, enquanto vai adicionando as novas arestas geradas
-  std::vector<Vertex> *points = obj->getLocalPoints();
+  std::vector<Vertex> *points = obj->getPoints();
   std::vector<std::pair<uint, uint>> *lines = obj->getLines();
   std::vector<Triangle> *triangles = obj->getTriangles();
   while (!queue.empty()) {
@@ -301,7 +301,7 @@ void TriangulationHandler::classifyTtriangles() {
 
 void TriangulationHandler::smoothTriangulation() {
 
-  std::vector<Vertex> *points = obj->getLocalPoints();
+  std::vector<Vertex> *points = obj->getPoints();
   std::vector<glm::vec3> newPositions(points->size());
   float lambda = 0.5f;
 
@@ -341,7 +341,7 @@ void TriangulationHandler::smoothTriangulation() {
 void TriangulationHandler::prepareFrames() {
 
   std::vector<Triangle> *triangles = obj->getTriangles();
-  std::vector<Vertex> *points = obj->getLocalPoints();
+  std::vector<Vertex> *points = obj->getPoints();
   for (int i = 0; i < triangles->size(); i++) {
     Triangle &currentTriangle = triangles->at(i);
     Frame newFrame = obj->getFrames().back();
@@ -358,7 +358,7 @@ void TriangulationHandler::prepareFrames() {
 
 void TriangulationHandler::debug() {
 
-  std::vector<Vertex> *points = obj->getLocalPoints();
+  std::vector<Vertex> *points = obj->getPoints();
 
   std::cout << "Points size:" << points->size() << std::endl;
   for (auto p : *points) {
@@ -368,7 +368,7 @@ void TriangulationHandler::debug() {
 
 void TriangulationHandler::fillNeighbours(uint p0, uint p1, uint p2) {
   std::vector<uint> vertices = {p0, p1, p2};
-  std::vector<Vertex> *points = obj->getLocalPoints();
+  std::vector<Vertex> *points = obj->getPoints();
   for (int i = 0; i < 3; i++) {
     Vertex &v = points->at(vertices[i]);
     v.neighbours.insert(vertices[(i + 1) % 3]);
@@ -440,8 +440,8 @@ int TriangulationHandler::delaunay(const std::pair<uint, uint> &edge) {
   float bestAngle = 1;
   bool found = false;
   float tolerance = 0.0;
-  std::vector<Vertex> *points = this->obj->getLocalPoints();
-  std::vector<uint> *indexes = this->obj->getLocalIndexes();
+  std::vector<Vertex> *points = this->obj->getPoints();
+  std::vector<uint> *indexes = this->obj->getIndexes();
   while (!found) {
     for (int i = 0; i < points->size(); i++) {
       bool valid = true;
@@ -505,8 +505,8 @@ uint TriangulationHandler::euclidian(Frame &frame1,
   float bestAngle = 1;
   glm::vec3 rightVertex = computeRightVertex(edge);
   float radius = computeRightTriangleHeight(edge);
-  std::vector<Vertex> *points = this->obj->getLocalPoints();
-  std::vector<uint> *indexes = this->obj->getLocalIndexes();
+  std::vector<Vertex> *points = this->obj->getPoints();
+  std::vector<uint> *indexes = this->obj->getIndexes();
   std::pair<glm::vec3, glm::vec3> rightEdgetemp1 =
       std::make_pair(points->at(edge.first).position, rightVertex);
   std::pair<glm::vec3, glm::vec3> rightEdgetemp2 =
@@ -581,7 +581,7 @@ uint TriangulationHandler::euclidian(Frame &frame1,
 
 glm::vec3
 TriangulationHandler::computeRightVertex(const std::pair<uint, uint> &edge) {
-  std::vector<Vertex> *points = this->obj->getLocalPoints();
+  std::vector<Vertex> *points = this->obj->getPoints();
   glm::vec3 edgeVec =
       (points->at(edge.second).position - points->at(edge.first).position);
   float edgeVeclen = glm::length(edgeVec);
@@ -624,7 +624,7 @@ float TriangulationHandler::computeCircunsRadius(glm::vec3 p0,
 
 float TriangulationHandler::computeRightTriangleHeight(
     const std::pair<uint, uint> &edge) {
-  std::vector<Vertex> *points = this->obj->getLocalPoints();
+  std::vector<Vertex> *points = this->obj->getPoints();
   float edgeVeclen = glm::length(points->at(edge.second).position -
                                  points->at(edge.first).position);
   return Misc::SQRT3 * edgeVeclen / 2.f;
@@ -634,7 +634,7 @@ bool TriangulationHandler::doIntersectOtherEdges(
     const std::pair<glm::vec3, glm::vec3> &e1,
     const std::pair<glm::vec3, glm::vec3> &e2) {
   bool intersect = false;
-  std::vector<Vertex> *points = this->obj->getLocalPoints();
+  std::vector<Vertex> *points = this->obj->getPoints();
   std::vector<std::pair<uint, uint>> *lines = this->obj->getLines();
   for (int i = 0; i < lines->size(); i++) {
     std::pair<uint, uint> currentEdge = lines->at(i);
@@ -657,7 +657,7 @@ bool TriangulationHandler::doIntersectOtherEdges(
     const std::pair<glm::vec3, glm::vec3> &e1,
     const std::pair<glm::vec3, glm::vec3> &e2) {
   bool intersect = false;
-  std::vector<Vertex> *points = this->obj->getLocalPoints();
+  std::vector<Vertex> *points = this->obj->getPoints();
   bool val = false;
   std::vector<std::pair<uint, uint>> *lines = this->obj->getLines();
   // std::cout<< "Procurando interseccao da aresta:";
@@ -690,7 +690,7 @@ bool TriangulationHandler::doIntersectOtherEdges(
 }
 
 bool TriangulationHandler::doTresPass(uint idxP0, uint idxP1, uint idxP2) {
-  std::vector<Vertex> *points = this->obj->getLocalPoints();
+  std::vector<Vertex> *points = this->obj->getPoints();
   glm::vec3 p0 = points->at(idxP0).position;
   glm::vec3 p1 = points->at(idxP1).position;
   glm::vec3 p2 = points->at(idxP2).position;
@@ -710,7 +710,7 @@ bool TriangulationHandler::doTresPass(uint idxP0, uint idxP1, uint idxP2) {
 }
 
 bool TriangulationHandler::doTresPass(uint idxP0, uint idxP1, glm::vec3 pRet) {
-  std::vector<Vertex> *points = this->obj->getLocalPoints();
+  std::vector<Vertex> *points = this->obj->getPoints();
   glm::vec3 p0 = points->at(idxP0).position;
   glm::vec3 p1 = points->at(idxP1).position;
   bool isInside = false;
