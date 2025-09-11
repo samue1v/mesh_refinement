@@ -31,6 +31,7 @@ public:
   void keyPressEvent(QKeyEvent *keyEvent) override;
   void wheelEvent(QWheelEvent *event) override;
   void mousePressEvent(QMouseEvent *evt) override;
+  void mouseReleaseEvent(QMouseEvent *evt) override;
   void initializeGL() override;
   void paintGL() override;
   void resizeGL(int w, int h) override;

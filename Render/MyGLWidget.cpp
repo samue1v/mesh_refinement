@@ -1,4 +1,7 @@
 #include "MyGLWidget.hpp"
+#include <QtImGui.h>
+#include <imgui.h>
+// #include <implot.h>
 #include <iostream>
 #include <unistd.h>
 MyGLWidget::MyGLWidget(QWidget *parent) {
@@ -8,6 +11,9 @@ MyGLWidget::MyGLWidget(QWidget *parent) {
   info = new InfoBox(this);
   scene = nullptr;
   f = nullptr;
+
+
+
   show();
 }
 
@@ -46,12 +52,14 @@ void MyGLWidget::initializeGL() {
 
   f->glClearColor(255.0, 255.0, 255.0, 1.0f);
 
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
+  QtImGui::initialize(this);
 
-  ImGui::StyleColorsDark();
+  // IMGUI_CHECKVERSION();
+  // ImGui::CreateContext();
 
-  ImGui_ImplOpenGL3_Init("#version 330");
+  // ImGui::StyleColorsDark();
+
+  // ImGui_ImplOpenGL3_Init("#version 330");
 
   mainMenu = new MainWidget(this, context());
 
@@ -59,25 +67,31 @@ void MyGLWidget::initializeGL() {
 }
 
 void MyGLWidget::paintGL() {
-  if (width() <= 0 || height() <= 0)
-    return;
+  // if (width() <= 0 || height() <= 0)
+  //   return;
 
-  ImGuiIO &io = ImGui::GetIO();
-  io.DisplaySize = ImVec2((float)width(), (float)height());
+  // ImGuiIO &io = ImGui::GetIO();
+  // io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+  // io.DisplaySize = ImVec2((float)width(), (float)height());
 
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui::NewFrame();
+  // ImGui_ImplOpenGL3_NewFrame();
+  // ImGui::NewFrame();
+  //
 
   f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  QtImGui::newFrame();
+
+  // Render scene here
+  //
+  if (scene != nullptr) {
+    scene->render();
+  }
 
   mainMenu->render();
 
   ImGui::Render();
-  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-  if (scene != nullptr) {
-    scene->render();
-  }
+  QtImGui::render();
+  // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void MyGLWidget::resizeGL(int w, int h) {}
@@ -171,60 +185,43 @@ void MyGLWidget::wheelEvent(QWheelEvent *event) {
 
 void MyGLWidget::mousePressEvent(QMouseEvent *evt) {
   makeCurrent();
-  /*   if(glObjectVec.size() == 0){return;}
-    makeCurrent();
-    QPointF virtualPos = evt->pos();
-    glm::mat4 view = camera->getViewMatrix();
-    glm::mat4 proj = camera->getProjMatrix();
-    glm::mat4 projView = proj*view;
-    glm::mat4 projViewInv = glm::inverse(projView);
-    float w = width();
-    float h = height();
-    glm::vec3 camerapos = camera->getPos();
+  ImGuiIO &io = ImGui::GetIO();
+  if (evt->button() == Qt::LeftButton)
+    io.MouseDown[0] = true;
+  if (evt->button() == Qt::RightButton)
+    io.MouseDown[1] = true;
 
-
-    glm::vec4 pos(virtualPos.x(),virtualPos.y(),-1.f,1.0f);
-
-
-    pos.x = (pos.x/w)*2.f -1.f;
-    pos.y = ((h-pos.y)/h)*2.f - 1.f;
-
-    pos = (projViewInv*pos);
-
-    pos.w = 1.f/pos.w;
-
-    pos.x *= pos.w;
-    pos.y *= pos.w;
-    pos.z *= pos.w;
-    for(GLObject * glObject : glObjectVec){
-      int idx = glObject->pickTriangle(glm::vec3(pos));
-
-      if(idx>-1){
-        info->update(idx, pos, glObject->getTriangles()->at(idx));
-        break;
-      }
-      else{
-        info->update(idx, pos, Triangle());
-      }
-    } */
-  if (scene == nullptr) {
-    return;
+  if (scene) {
+    if (evt->button() == Qt::LeftButton) {
+      QPointF virtualPos = evt->pos();
+      float w = width();
+      float h = height();
+      std::pair<int, Triangle> ret = scene->mousePickLeft(
+          glm::vec3(virtualPos.x(), virtualPos.y(), 0.f), w, h);
+      info->update(ret.first, ret.second);
+    } else if (evt->button() == Qt::RightButton) {
+      QPointF virtualPos = evt->pos();
+      float w = width();
+      float h = height();
+      scene->mousePickRight(glm::vec3(virtualPos.x(), virtualPos.y(), 0.f), w,
+                            h);
+      // scene->updateText();
+    }
   }
-  if (evt->button() == Qt::LeftButton) {
-    QPointF virtualPos = evt->pos();
-    float w = width();
-    float h = height();
-    std::pair<int, Triangle> ret = scene->mousePickLeft(
-        glm::vec3(virtualPos.x(), virtualPos.y(), 0.f), w, h);
-    info->update(ret.first, ret.second);
-  } else if (evt->button() == Qt::RightButton) {
-    QPointF virtualPos = evt->pos();
-    float w = width();
-    float h = height();
-    scene->mousePickRight(glm::vec3(virtualPos.x(), virtualPos.y(), 0.f), w, h);
-    // scene->updateText();
-  }
-  evt->accept();
+  // evt->accept();
+  update();
+  doneCurrent();
+}
+
+void MyGLWidget::mouseReleaseEvent(QMouseEvent *evt) {
+  makeCurrent();
+  ImGuiIO &io = ImGui::GetIO();
+  if (evt->button() == Qt::LeftButton)
+    io.MouseDown[0] = false;
+  if (evt->button() == Qt::RightButton)
+    io.MouseDown[1] = false;
+
+  // evt->accept();
   update();
   doneCurrent();
 }

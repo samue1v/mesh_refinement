@@ -65,7 +65,6 @@ void MainWidget::objListChosen(std::string name) {
 }
 
 void MainWidget::draw() {
-  ImGui::Begin("My Window");
-  ImGui::Text("Hello world");
-  ImGui::End();
+  static bool show_demo_window = true;
+  ImGui::ShowDemoWindow(&show_demo_window);
 }
