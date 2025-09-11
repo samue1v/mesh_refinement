@@ -22,9 +22,17 @@
 #include <glm/glm.hpp>
 #include <glm/vec3.hpp>
 #include <stdlib.h>
+#include <unordered_map>
+
+class IMGUI_helper {
+public:
+  static std::unordered_map<int, ImGuiKey> qtToImGuiKey;
+  static ImGuiKey QtKeyToImGuiKey(int qt_key);
+};
 
 class MyGLWidget : public QOpenGLWidget {
   Q_OBJECT
+
 public:
   MyGLWidget(QWidget *parent = 0);
   ~MyGLWidget();
@@ -32,13 +40,14 @@ public:
   void wheelEvent(QWheelEvent *event) override;
   void mousePressEvent(QMouseEvent *evt) override;
   void mouseReleaseEvent(QMouseEvent *evt) override;
+  void keyReleaseEvent(QKeyEvent *evt) override;
+  void mouseMoveEvent(QMouseEvent *evt) override;
   void initializeGL() override;
   void paintGL() override;
   void resizeGL(int w, int h) override;
   Scene *getScene();
   void createScene(MenuCommands::CreateSceneCMD &scene_cmd);
   void setVisibleObjects(std::string name);
-  void updateWidget();
 
   // private:
   // void widgetToPhoto();

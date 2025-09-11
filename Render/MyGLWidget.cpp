@@ -1,18 +1,53 @@
 #include "MyGLWidget.hpp"
-#include <QtImGui.h>
+// #include <QtImGui.h>
 #include <imgui.h>
 // #include <implot.h>
 #include <iostream>
 #include <unistd.h>
+
+std::unordered_map<int, ImGuiKey> IMGUI_helper::qtToImGuiKey = {
+    {Qt::Key_Tab, ImGuiKey_Tab},
+    {Qt::Key_Left, ImGuiKey_LeftArrow},
+    {Qt::Key_Right, ImGuiKey_RightArrow},
+    {Qt::Key_Up, ImGuiKey_UpArrow},
+    {Qt::Key_Down, ImGuiKey_DownArrow},
+    {Qt::Key_PageUp, ImGuiKey_PageUp},
+    {Qt::Key_PageDown, ImGuiKey_PageDown},
+    {Qt::Key_Home, ImGuiKey_Home},
+    {Qt::Key_End, ImGuiKey_End},
+    {Qt::Key_Insert, ImGuiKey_Insert},
+    {Qt::Key_Delete, ImGuiKey_Delete},
+    {Qt::Key_Backspace, ImGuiKey_Backspace},
+    {Qt::Key_Space, ImGuiKey_Space},
+    {Qt::Key_Enter, ImGuiKey_Enter},
+    {Qt::Key_Return, ImGuiKey_Enter},
+    {Qt::Key_Escape, ImGuiKey_Escape},
+    {Qt::Key_A, ImGuiKey_A},
+    {Qt::Key_W, ImGuiKey_W},
+    {Qt::Key_S, ImGuiKey_S},
+    {Qt::Key_D, ImGuiKey_D},
+    {Qt::Key_C, ImGuiKey_C},
+    {Qt::Key_V, ImGuiKey_V},
+    {Qt::Key_X, ImGuiKey_X},
+    {Qt::Key_Y, ImGuiKey_Y},
+    {Qt::Key_Z, ImGuiKey_Z},
+};
+
+ImGuiKey IMGUI_helper::QtKeyToImGuiKey(int qt_key) {
+  auto it = qtToImGuiKey.find(qt_key);
+  return (it != qtToImGuiKey.end()) ? it->second : ImGuiKey_None;
+}
+
 MyGLWidget::MyGLWidget(QWidget *parent) {
   setFixedSize(1280, 960);
   setFocusPolicy(Qt::ClickFocus);
   setContentsMargins(5, 5, 5, 5);
+  setFocusPolicy(Qt::StrongFocus);
+  setAttribute(Qt::WA_InputMethodEnabled, true);
+  setMouseTracking(true);
   info = new InfoBox(this);
   scene = nullptr;
   f = nullptr;
-
-
 
   show();
 }
@@ -52,14 +87,14 @@ void MyGLWidget::initializeGL() {
 
   f->glClearColor(255.0, 255.0, 255.0, 1.0f);
 
-  QtImGui::initialize(this);
+  // QtImGui::initialize(this);
 
-  // IMGUI_CHECKVERSION();
-  // ImGui::CreateContext();
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
 
-  // ImGui::StyleColorsDark();
+  ImGui::StyleColorsLight();
 
-  // ImGui_ImplOpenGL3_Init("#version 330");
+  ImGui_ImplOpenGL3_Init("#version 330");
 
   mainMenu = new MainWidget(this, context());
 
@@ -67,19 +102,18 @@ void MyGLWidget::initializeGL() {
 }
 
 void MyGLWidget::paintGL() {
-  // if (width() <= 0 || height() <= 0)
-  //   return;
+  if (width() <= 0 || height() <= 0)
+    return;
 
-  // ImGuiIO &io = ImGui::GetIO();
-  // io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
-  // io.DisplaySize = ImVec2((float)width(), (float)height());
+  ImGuiIO &io = ImGui::GetIO();
+  io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+  io.DisplaySize = ImVec2((float)width(), (float)height());
 
-  // ImGui_ImplOpenGL3_NewFrame();
-  // ImGui::NewFrame();
-  //
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui::NewFrame();
 
   f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  QtImGui::newFrame();
+  // QtImGui::newFrame();
 
   // Render scene here
   //
@@ -87,20 +121,34 @@ void MyGLWidget::paintGL() {
     scene->render();
   }
 
-  mainMenu->render();
+  // mainMenu->render();
+  ImGui::ShowDemoWindow();
 
   ImGui::Render();
-  QtImGui::render();
-  // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  // QtImGui::render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void MyGLWidget::resizeGL(int w, int h) {}
 
 void MyGLWidget::keyPressEvent(QKeyEvent *keyEvent) {
-  makeCurrent();
   // if (keyEvent->key() == Qt::Key_1) {
   //   widgetToPhoto();
   // }
+  ImGuiIO &io = ImGui::GetIO();
+  ImGuiKey key = IMGUI_helper::QtKeyToImGuiKey(keyEvent->key());
+  if (key != ImGuiKey_None)
+    io.AddKeyEvent(key, true);
+
+  io.AddKeyEvent(ImGuiMod_Ctrl, keyEvent->modifiers() & Qt::ControlModifier);
+  io.AddKeyEvent(ImGuiMod_Shift, keyEvent->modifiers() & Qt::ShiftModifier);
+  io.AddKeyEvent(ImGuiMod_Alt, keyEvent->modifiers() & Qt::AltModifier);
+  io.AddKeyEvent(ImGuiMod_Super, keyEvent->modifiers() & Qt::MetaModifier);
+
+  QString text = keyEvent->text();
+  for (QChar ch : text) {
+    io.AddInputCharacter(ch.unicode());
+  }
 
   if (scene != nullptr) {
 
@@ -164,12 +212,30 @@ void MyGLWidget::keyPressEvent(QKeyEvent *keyEvent) {
       scene->decreaseSpeed();
     }
   }
-  updateWidget();
-  doneCurrent();
+  QWidget::keyPressEvent(keyEvent);
+  // updateWidget();
+}
+
+void MyGLWidget::keyReleaseEvent(QKeyEvent *evt) {
+  ImGuiIO &io = ImGui::GetIO();
+  ImGuiKey key = IMGUI_helper::QtKeyToImGuiKey(evt->key());
+  if (key != ImGuiKey_None)
+    io.AddKeyEvent(key, false);
+
+  io.AddKeyEvent(ImGuiMod_Ctrl, evt->modifiers() & Qt::ControlModifier);
+  io.AddKeyEvent(ImGuiMod_Shift, evt->modifiers() & Qt::ShiftModifier);
+  io.AddKeyEvent(ImGuiMod_Alt, evt->modifiers() & Qt::AltModifier);
+  io.AddKeyEvent(ImGuiMod_Super, evt->modifiers() & Qt::MetaModifier);
+
+  QWidget::keyReleaseEvent(evt);
 }
 
 void MyGLWidget::wheelEvent(QWheelEvent *event) {
   makeCurrent();
+
+  ImGuiIO &io = ImGui::GetIO();
+  io.AddMouseWheelEvent(0.0f, event->angleDelta().y() / 120.0f);
+
   if (scene != nullptr) {
     if (event->angleDelta().y() > 0) {
       scene->scrollUp();
@@ -179,7 +245,9 @@ void MyGLWidget::wheelEvent(QWheelEvent *event) {
       scene->scrollDown();
     }
   }
-  updateWidget();
+
+  QWidget::wheelEvent(event);
+  // updateWidget();
   doneCurrent();
 }
 
@@ -187,9 +255,11 @@ void MyGLWidget::mousePressEvent(QMouseEvent *evt) {
   makeCurrent();
   ImGuiIO &io = ImGui::GetIO();
   if (evt->button() == Qt::LeftButton)
-    io.MouseDown[0] = true;
+    io.AddMouseButtonEvent(0, true);
   if (evt->button() == Qt::RightButton)
-    io.MouseDown[1] = true;
+    io.AddMouseButtonEvent(1, true);
+  if (evt->button() == Qt::MiddleButton)
+    io.AddMouseButtonEvent(2, true);
 
   if (scene) {
     if (evt->button() == Qt::LeftButton) {
@@ -209,33 +279,32 @@ void MyGLWidget::mousePressEvent(QMouseEvent *evt) {
     }
   }
   // evt->accept();
-  update();
+  // update();
+  QWidget::mousePressEvent(evt);
   doneCurrent();
 }
 
 void MyGLWidget::mouseReleaseEvent(QMouseEvent *evt) {
-  makeCurrent();
   ImGuiIO &io = ImGui::GetIO();
   if (evt->button() == Qt::LeftButton)
-    io.MouseDown[0] = false;
+    io.AddMouseButtonEvent(0, false);
   if (evt->button() == Qt::RightButton)
-    io.MouseDown[1] = false;
+    io.AddMouseButtonEvent(1, false);
+  if (evt->button() == Qt::MiddleButton)
+    io.AddMouseButtonEvent(2, false);
 
-  // evt->accept();
-  update();
-  doneCurrent();
+  QWidget::mouseReleaseEvent(evt);
+}
+
+void MyGLWidget::mouseMoveEvent(QMouseEvent *evt) {
+  ImGuiIO &io = ImGui::GetIO();
+  io.AddMousePosEvent(evt->position().x(), evt->position().y());
+  QWidget::mouseMoveEvent(evt);
 }
 
 void MyGLWidget::setVisibleObjects(std::string name) {
   scene->setVisible(name);
-  updateWidget();
-}
-
-void MyGLWidget::updateWidget() {
-  makeCurrent();
-  // info->update(-1);
-  update();
-  doneCurrent();
+  // updateWidget();
 }
 
 // void MyGLWidget::widgetToPhoto() {
