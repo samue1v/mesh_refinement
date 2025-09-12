@@ -69,7 +69,7 @@ public:
   int getIndexFromVertex(Vertex v);
   Vertex getVertexFromIndex(uint idx);
   std::string getObjectName(int idx);
-  AbsHandler *buildHandler(int typeHandler);
+  AbsHandler *buildHandler(MenuCommands::MeshingApproach typeHandler);
 
   // private:
   std::string sceneSource;

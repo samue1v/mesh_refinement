@@ -4,6 +4,16 @@
 #include <string>
 
 namespace MenuCommands {
+enum class MeshingApproach {
+  None,
+  PCA,
+  PCAInv,
+};
+
+enum class PostProcessingApproach {
+  None,
+  Smooth,
+};
 
 struct CreateSceneCMD {
   struct Transformation {
@@ -11,17 +21,11 @@ struct CreateSceneCMD {
     float rotation = 0;
   };
 
-  enum MeshingApproach {
-    None,
-    PCA,
-    PCAInv,
-    Smooth,
-  };
-
   Transformation transformation;
-  MeshingApproach approach;
+  MeshingApproach MeshApproach;
+  PostProcessingApproach PostApproach;
   std::string objPath;
 };
-}; // namespace DrawMessages
+}; // namespace MenuCommands
 
 #endif

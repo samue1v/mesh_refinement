@@ -4,3 +4,6 @@
 [submodule "External/implot"]
 	path = External/implot
 	url = https://github.com/epezent/implot.git
+[submodule "External/imguifiledialog"]
+	path = External/imguifiledialog
+	url = https://github.com/aiekick/ImGuiFileDialog.git

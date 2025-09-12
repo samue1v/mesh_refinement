@@ -11,7 +11,7 @@ Scene::Scene(MyGLWidget *glw, QOpenGLContext *context,
   for (int i = 0; i < numf; i++) {
     HandObject *h = new HandObject(this, context);
     f->parse(h, i);
-    h->setbaseHandler(buildHandler(scene_cmd.approach));
+    h->setbaseHandler(buildHandler(scene_cmd.MeshApproach));
     h->init();
     objects.push_back(h);
   }
@@ -71,12 +71,12 @@ void Scene::setVisible(std::string s) {
   // updateText();
 }
 
-AbsHandler *Scene::buildHandler(int typeHandler) {
+AbsHandler *Scene::buildHandler(MenuCommands::MeshingApproach typeHandler) {
   AbsHandler *base = new AbsHandler;
   TriangulationHandler *trHandler = new TriangulationHandler;
   NormalizationHandler *normHandler = new NormalizationHandler;
   QuadTreeHandler *treeHandler = new QuadTreeHandler;
-  if (typeHandler == 2) {
+  if (typeHandler == MenuCommands::MeshingApproach::PCAInv) {
     PCAHandler *pcaHand = new PCAHandler;
     PCAInverseHandler *pcaHandInv = new PCAInverseHandler(pcaHand);
     base->setNext(normHandler)
@@ -84,7 +84,7 @@ AbsHandler *Scene::buildHandler(int typeHandler) {
         ->setNext(treeHandler)
         ->setNext(trHandler)
         ->setNext(pcaHandInv);
-  } else if (typeHandler == 1) {
+  } else if (typeHandler == MenuCommands::MeshingApproach::PCA) {
     PCAHandler *pcaHand = new PCAHandler;
     base->setNext(normHandler)
         ->setNext(pcaHand)

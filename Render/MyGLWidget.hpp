@@ -28,6 +28,7 @@ class IMGUI_helper {
 public:
   static std::unordered_map<int, ImGuiKey> qtToImGuiKey;
   static ImGuiKey QtKeyToImGuiKey(int qt_key);
+  static void StyleColorsSpectrum();
 };
 
 class MyGLWidget : public QOpenGLWidget {
