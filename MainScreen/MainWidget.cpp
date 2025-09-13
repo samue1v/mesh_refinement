@@ -9,7 +9,9 @@ using json = nlohmann::json;
 
 MainWidget::MainWidget(MyGLWidget *_glWidget, QOpenGLContext *context)
     : GLDrawable(context), glWidget(_glWidget), showMenu(true),
-      openDialog(false), showCharts(true), RotationAngle(-1), ScaleFactor(-1) {
+      openDialog(false), showCharts(true), RotationAngle(-1), ScaleFactor(-1),
+      selectedPostProcessing(MenuCommands::PostProcessingApproach::None),
+      selectedAnalytical(MenuCommands::MeshingApproach::None) {
   init();
 }
 
@@ -130,7 +132,10 @@ void MainWidget::ShowFileMenu() {
       data = json::parse(fi);
       auto &recent = data["recentFiles"];
       for (auto it = recent.rbegin(); it != recent.rend(); ++it) {
-        ImGui::MenuItem(it->get<std::string>().c_str());
+        std::string s = it->get<std::string>();
+        if (ImGui::MenuItem(s.c_str())) {
+          fileChosen(s);
+        }
       }
     }
 
@@ -153,7 +158,7 @@ void MainWidget::openFile(const std::string &path) {
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       logChosenFile(filePathName);
-      // fileChosen(filePathName);
+      fileChosen(filePathName);
     }
 
     // close
@@ -180,7 +185,7 @@ void MainWidget::logChosenFile(const std::string &name) {
   if (data[key].size() < recent_files_max_count) {
     data[key].push_back(name);
   } else {
-    data[key].erase(data[key].end()-1);
+    data[key].erase(data[key].end() - 1);
     data[key].push_back(name);
   }
   std::ofstream fo("user_data.json");

@@ -203,7 +203,6 @@ void HandObject::init() {
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // unbid current EBO
   f->glBindVertexArray(0);                     // unbind current VAO
 
-  std::cout << "here\n";
 }
 
 void HandObject::draw() {
@@ -221,6 +220,8 @@ void HandObject::draw() {
   // Ver isso!!
 
   // ViewMatrix set
+  
+  std::cout << "here\n";
 
   uint p0ID = program[0].getProgramId();
   f->glUseProgram(p0ID);
