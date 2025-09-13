@@ -30,6 +30,7 @@ public:
   void notifyClear() override;
   void fileChosen(const std::string & file);
   void objListChosen(std::string name);
+  void logChosenFile(const std::string & name);
   void render();
 
   void ShowMainMenuBar();

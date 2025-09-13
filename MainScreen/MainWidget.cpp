@@ -1,7 +1,11 @@
 #include "MainWidget.hpp"
 #include "../Render/MyGLWidget.hpp"
 #include "ImGuiFileDialog.h"
+#include <fstream>
+#include <nlohmann/json.hpp>
 #include <string>
+
+using json = nlohmann::json;
 
 MainWidget::MainWidget(MyGLWidget *_glWidget, QOpenGLContext *context)
     : GLDrawable(context), glWidget(_glWidget), showMenu(true),
@@ -120,14 +124,16 @@ void MainWidget::ShowFileMenu() {
     openDialog = true;
   }
   if (ImGui::BeginMenu("Open Recent")) {
-    ImGui::MenuItem("fish_hat.c");
-    ImGui::MenuItem("fish_hat.inl");
-    ImGui::MenuItem("fish_hat.h");
-    if (ImGui::BeginMenu("More..")) {
-      ImGui::MenuItem("Hello");
-      ImGui::MenuItem("Sailor");
-      ImGui::EndMenu();
+    std::ifstream fi("user_data.json");
+    json data;
+    if (fi.peek() != std::ifstream::traits_type::eof()) {
+      data = json::parse(fi);
+      auto &recent = data["recentFiles"];
+      for (auto it = recent.rbegin(); it != recent.rend(); ++it) {
+        ImGui::MenuItem(it->get<std::string>().c_str());
+      }
     }
+
     ImGui::EndMenu();
   }
 }
@@ -144,10 +150,10 @@ void MainWidget::openFile(const std::string &path) {
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
 
     if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
-      std::cout << "Dentro\n";
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-      fileChosen(filePathName);
+      logChosenFile(filePathName);
+      // fileChosen(filePathName);
     }
 
     // close
@@ -155,15 +161,45 @@ void MainWidget::openFile(const std::string &path) {
   }
 }
 
+void MainWidget::logChosenFile(const std::string &name) {
+  std::ifstream fi("user_data.json");
+  constexpr int recent_files_max_count = 5;
+
+  json data;
+
+  if (fi.peek() != std::ifstream::traits_type::eof()) { // not empty
+    data = json::parse(fi);
+  } else {
+    data = json::object(); // start with empty JSON object
+  }
+
+  std::string key = "recentFiles";
+  if (!data.contains(key)) {
+    data[key] = json::array();
+  }
+  if (data[key].size() < recent_files_max_count) {
+    data[key].push_back(name);
+  } else {
+    data[key].erase(data[key].end()-1);
+    data[key].push_back(name);
+  }
+  std::ofstream fo("user_data.json");
+  fo << data;
+}
+
 void MainWidget::fileChosen(const std::string &filePath) {
 
   std::cout << filePath << "\n";
-  // MenuCommands::CreateSceneCMD cmd;
-  // cmd.objPath = filePath;
-  // glWidget->createScene(cmd);
-  // for (int i = 0; i < glWidget->getScene()->getNumObjects(); i++) {
-  //   objList.push_back(glWidget->getScene()->getObjectName(i));
-  // }
+  MenuCommands::CreateSceneCMD cmd;
+  cmd.objPath = filePath;
+  cmd.MeshApproach = selectedAnalytical;
+  cmd.PostApproach = selectedPostProcessing;
+  cmd.transformation.scale = ScaleFactor;
+  cmd.transformation.rotation = RotationAngle;
+  glWidget->createScene(cmd);
+  for (int i = 0; i < glWidget->getScene()->getNumObjects(); i++) {
+    objList.push_back(glWidget->getScene()->getObjectName(i));
+  }
   // notifyClear();
 }
 

@@ -131,7 +131,7 @@ MyGLWidget::~MyGLWidget() {
   delete info;
 }
 
-void MyGLWidget::createScene(MenuCommands::CreateSceneCMD &scene_cmd) {
+void MyGLWidget::createScene(const MenuCommands::CreateSceneCMD &scene_cmd) {
   makeCurrent();
   if (scene != nullptr) {
     delete scene;

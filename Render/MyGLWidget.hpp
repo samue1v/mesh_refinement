@@ -47,7 +47,7 @@ public:
   void paintGL() override;
   void resizeGL(int w, int h) override;
   Scene *getScene();
-  void createScene(MenuCommands::CreateSceneCMD &scene_cmd);
+  void createScene(const MenuCommands::CreateSceneCMD &scene_cmd);
   void setVisibleObjects(std::string name);
 
   // private:

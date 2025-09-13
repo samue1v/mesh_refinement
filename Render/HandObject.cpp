@@ -7,7 +7,6 @@ HandObject::HandObject(Scene *scene, QOpenGLContext *context)
   currentFrame = 0;
 }
 
-
 HandObject::~HandObject() {
   if (tree != nullptr) {
     delete tree;
@@ -19,15 +18,15 @@ void HandObject::init() {
   // TODO
   // PASSAR O PARSING PARA ESSA CLASSE E CONTINUAR O RESTO...(feito)
   // Colocar, no inicio de init, a chamada de execHandlers...(feito)
-  Frame firstframe = Frame(
-      {0, points.size(), 0, lines.size(), 0, 0, glm::vec3(0, 0, 0), 0});
+  Frame firstframe =
+      Frame({0, points.size(), 0, lines.size(), 0, 0, glm::vec3(0, 0, 0), 0});
   frames.push_back(firstframe);
 
   // tree->initQuadTree();
   // tree->init();
 
   // executing base handler
-  execHandlers();
+  // execHandlers();
 
   // writing result
   // writeToFile(destFile);
@@ -85,8 +84,7 @@ void HandObject::init() {
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
   // f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint) *
   // sourceFilePointsSize, localPointIndexes.data(),GL_DYNAMIC_DRAW);
-  f->glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                  sizeof(uint) * indexes.size(),
+  f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint) * indexes.size(),
                   indexes.data(), GL_DYNAMIC_DRAW);
 
   GLint point_position_attribute =
@@ -204,6 +202,8 @@ void HandObject::init() {
   f->glBindBuffer(GL_ARRAY_BUFFER, 0);         // unbid current VBO
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // unbid current EBO
   f->glBindVertexArray(0);                     // unbind current VAO
+
+  std::cout << "here\n";
 }
 
 void HandObject::draw() {
@@ -270,8 +270,7 @@ void HandObject::draw() {
   //????
   // f->glDrawElements(GL_POINTS,pointsCount,GL_UNSIGNED_INT,localPointIndexes.data()
   // + frames[currentFrame].PointBegin*sizeof(uint));
-  f->glDrawElements(GL_POINTS, indexes.size(), GL_UNSIGNED_INT,
-                    indexes.data());
+  f->glDrawElements(GL_POINTS, indexes.size(), GL_UNSIGNED_INT, indexes.data());
 
   f->glBindVertexArray(0);
 

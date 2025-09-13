@@ -68,3 +68,4 @@ Misc/*
 .clang-format
 .cache/*
 compile_commands.json
+user_data.json

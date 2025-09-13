@@ -49,7 +49,9 @@ qt_add_executable(hand main.cpp
                   External/imguifiledialog/ImGuiFileDialog.cpp
 )
 
-target_link_libraries(hand PRIVATE Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Charts Qt6::OpenGLWidgets Qt6::PrintSupport ${FREETYPE_LIBRARIES})
+add_subdirectory(External/nlohmann_json)
+
+target_link_libraries(hand PRIVATE Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Charts Qt6::OpenGLWidgets Qt6::PrintSupport nlohmann_json::nlohmann_json ${FREETYPE_LIBRARIES})
 target_include_directories(hand PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/External/imgui ${CMAKE_CURRENT_SOURCE_DIR}/External/implot ${CMAKE_CURRENT_SOURCE_DIR}/External/imguifiledialog ${FREETYPE_INCLUDE_DIRS})
 
 #cmake_minimum_required(VERSION 3.16)

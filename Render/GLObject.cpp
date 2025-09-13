@@ -1,7 +1,7 @@
 #include "GLObject.hpp"
 #include "Scene.hpp"
 
-GLDrawable::GLDrawable(QOpenGLContext *context = nullptr) : visibility(true) {
+GLDrawable::GLDrawable(QOpenGLContext *context) : visibility(true) {
   if (context != nullptr) {
     currentContext = context;
     f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(context);
@@ -19,8 +19,8 @@ bool GLDrawable::isVisible() { return visibility; }
 
 void GLDrawable::setVisible(const bool vis) { visibility = vis; }
 
-GLSimpleMesh::GLSimpleMesh(QOpenGLContext *context = 0,
-                           Scene *_currentScene = 0)
+GLSimpleMesh::GLSimpleMesh(QOpenGLContext *context,
+                           Scene *_currentScene)
     : GLDrawable(context), baseHandler(nullptr), currentScene(_currentScene) {}
 
 std::vector<Vertex> *GLSimpleMesh::getPoints() { return &points; }

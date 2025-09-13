@@ -7,3 +7,6 @@
 [submodule "External/imguifiledialog"]
 	path = External/imguifiledialog
 	url = https://github.com/aiekick/ImGuiFileDialog.git
+[submodule "External/nlohmann_json"]
+	path = External/nlohmann_json
+	url = https://github.com/nlohmann/json.git
