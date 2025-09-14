@@ -207,9 +207,9 @@ void MainWidget::fileChosen(const std::string &filePath) {
   cmd.transformation.scale = ScaleFactor;
   cmd.transformation.rotation = RotationAngle;
   glWidget->createScene(cmd);
-  //for (int i = 0; i < glWidget->getScene()->getNumObjects(); i++) {
-  //  objList.push_back(glWidget->getScene()->getObjectName(i));
-  //}
+  for (int i = 0; i < glWidget->getScene()->getNumObjects(); i++) {
+    objList.push_back(glWidget->getScene()->getObjectName(i));
+  }
   // notifyClear();
 }
 
@@ -236,11 +236,11 @@ void MainWidget::notifyClear() {
 }
 
 int MainWidget::getStep() {
-  // return sideMenu->getStepVal();
+  return step; 
 }
 
 int MainWidget::getSmoothStep() {
-  // return sideMenu->getStepValSmooth();
+  return step;
 }
 
 void MainWidget::objListChosen(std::string name) {

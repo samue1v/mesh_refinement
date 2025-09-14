@@ -20,6 +20,9 @@ void HandObject::init() {
       Frame({0, points.size(), 0, lines.size(), 0, 0, glm::vec3(0, 0, 0), 0});
   frames.push_back(firstframe);
 
+  // executing base handler
+  execHandlers();
+
   // pontos,linhas, triangulo e circulo...
   VAO.reserve(5);
   VAO.resize(5);
@@ -180,11 +183,6 @@ void HandObject::init() {
 
 void HandObject::draw() {
 
-  // if (tree != nullptr && tree->isVisible())
-  //{
-  //   tree->draw();
-  // }
-
   // std::cout<<"Drawing...\n";
   f->glPointSize(4);
   f->glLineWidth(1);
@@ -236,13 +234,9 @@ void HandObject::draw() {
 
   f->glBindVertexArray(VAO[0]);
 
-  // f->glUseProgram(program[0].getProgramId());
   int pointsCount =
       frames[currentFrame].PointEnd - frames[currentFrame].PointBegin;
   f->glUseProgram(program[0].getProgramId());
-  //????
-  // f->glDrawElements(GL_POINTS,pointsCount,GL_UNSIGNED_INT,localPointIndexes.data()
-  // + frames[currentFrame].PointBegin*sizeof(uint));
   f->glDrawElements(GL_POINTS, indexes.size(), GL_UNSIGNED_INT, indexes.data());
 
   f->glBindVertexArray(0);
@@ -261,7 +255,6 @@ void HandObject::draw() {
 
   f->glBindVertexArray(0);
 
-  std::cout << "1\n";
   //// TRIANGLES
   f->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -297,11 +290,10 @@ void HandObject::draw() {
   f->glBindBuffer(GL_ARRAY_BUFFER, 0);
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-  // if (tree != nullptr && tree->isVisible()) {
-  //   tree->draw();
-  // }
+  if (tree != nullptr && tree->isVisible()) {
+    tree->draw();
+  }
 
-  std::cout << "2\n";
 
   ////Circle
   int num_segments = 100;

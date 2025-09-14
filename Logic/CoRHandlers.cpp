@@ -224,9 +224,9 @@ GLSimpleMesh *TriangulationHandler::handle(GLSimpleMesh *request) {
   }
 
   makeTriangulation(this->obj);
-  for(int _ = 0;_<4;_++){
-    smoothTriangulation();
-  }
+  //for(int _ = 0;_<4;_++){
+  //  smoothTriangulation();
+  //}
   classifyTtriangles();
   prepareFrames();
   debug();

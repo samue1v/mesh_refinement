@@ -64,17 +64,12 @@ void Scene::setVisible(std::string s) {
   for (HandObject *obj : objects) {
     if (obj->name == s || s == "All") {
       obj->restoreOriginal();
-      // obj->setbaseHandler(buildHandler(transformType));
-      // obj->init();
-
-      // obj->execHandlers();
       obj->setVisible(true);
       currentObj = obj;
     } else {
       obj->setVisible(false);
     }
   }
-  // updateText();
 }
 
 AbsHandler *Scene::buildHandler(MenuCommands::MeshingApproach typeHandler) {
