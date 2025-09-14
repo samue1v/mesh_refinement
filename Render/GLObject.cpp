@@ -11,17 +11,21 @@ GLDrawable::GLDrawable(QOpenGLContext *context) : visibility(true) {
   }
 }
 
-GLDrawable::~GLDrawable(){
-  delete f;
-}
+GLDrawable::~GLDrawable() { std::cout << "GLDrawable destructor\n"; }
 
 bool GLDrawable::isVisible() { return visibility; }
 
 void GLDrawable::setVisible(const bool vis) { visibility = vis; }
 
-GLSimpleMesh::GLSimpleMesh(QOpenGLContext *context,
-                           Scene *_currentScene)
+GLSimpleMesh::GLSimpleMesh(QOpenGLContext *context, Scene *_currentScene)
     : GLDrawable(context), baseHandler(nullptr), currentScene(_currentScene) {}
+
+GLSimpleMesh::~GLSimpleMesh() {
+  std::cout << "GLSimpleMesh destructor\n";
+  if (baseHandler != nullptr) {
+    delete baseHandler;
+  }
+}
 
 std::vector<Vertex> *GLSimpleMesh::getPoints() { return &points; }
 
@@ -213,7 +217,10 @@ void GLSimpleMesh::draw() {
 GLTriMesh::GLTriMesh(Scene *scene, QOpenGLContext *context)
     : GLSimpleMesh(context, scene) {}
 
-GLTriMesh::~GLTriMesh() { delete baseHandler; }
+GLTriMesh::~GLTriMesh() {
+
+  std::cout << "GLTriMesh destructor\n";
+}
 
 void GLTriMesh::init() {}
 

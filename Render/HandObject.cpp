@@ -8,6 +8,7 @@ HandObject::HandObject(Scene *scene, QOpenGLContext *context)
 }
 
 HandObject::~HandObject() {
+  std::cout << "HandObject destructor\n";
   if (tree != nullptr) {
     delete tree;
   }
@@ -15,21 +16,9 @@ HandObject::~HandObject() {
 
 void HandObject::init() {
 
-  // TODO
-  // PASSAR O PARSING PARA ESSA CLASSE E CONTINUAR O RESTO...(feito)
-  // Colocar, no inicio de init, a chamada de execHandlers...(feito)
   Frame firstframe =
       Frame({0, points.size(), 0, lines.size(), 0, 0, glm::vec3(0, 0, 0), 0});
   frames.push_back(firstframe);
-
-  // tree->initQuadTree();
-  // tree->init();
-
-  // executing base handler
-  // execHandlers();
-
-  // writing result
-  // writeToFile(destFile);
 
   // pontos,linhas, triangulo e circulo...
   VAO.reserve(5);
@@ -54,9 +43,6 @@ void HandObject::init() {
   // points,lines and triangles
   program[0].createShaderFromFile("fill_vertex.vert", "fill_frag.frag");
 
-  // triangles
-  // program[2].createShaderFromFile("circleVert.vert","circleFrag.frag");
-
   // circle
   program[1].createShaderFromFile("circleVert.vert", "circleFrag.frag");
 
@@ -67,23 +53,18 @@ void HandObject::init() {
 
   std::vector<std::pair<glm::vec3, glm::vec3>> vertexBufferPoints;
   for (Vertex &v : points) {
-    // vertexBufferPoints.push_back({v.position,v.color});
     vertexBufferPoints.push_back({v.position, {1.f, 0.f, 0.f}});
   }
 
   f->glBindVertexArray(VAO[0]);
 
   f->glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-  // f->glBufferData(GL_ARRAY_BUFFER,sizeof(Vertex) * sourceFilePointsSize,
-  // localPoints.data(),GL_DYNAMIC_DRAW);
   f->glBufferData(GL_ARRAY_BUFFER,
                   sizeof(std::pair<glm::vec3, glm::vec3>) *
                       vertexBufferPoints.size(),
                   vertexBufferPoints.data(), GL_DYNAMIC_DRAW);
 
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
-  // f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint) *
-  // sourceFilePointsSize, localPointIndexes.data(),GL_DYNAMIC_DRAW);
   f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint) * indexes.size(),
                   indexes.data(), GL_DYNAMIC_DRAW);
 
@@ -108,16 +89,12 @@ void HandObject::init() {
   f->glBindVertexArray(VAO[1]);
 
   f->glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-  // f->glBufferData(GL_ARRAY_BUFFER,sizeof(Vec3) *
-  // handHull.tvVec().size()*1000, handHull.tvVec().data(),GL_DYNAMIC_DRAW);
   f->glBufferData(GL_ARRAY_BUFFER,
                   sizeof(std::pair<glm::vec3, glm::vec3>) *
                       sourceFilePointsSize,
                   vertexBufferPoints.data(), GL_DYNAMIC_DRAW);
 
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
-  // f->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(std::pair<uint,uint>) *
-  // handHull.lVec().size()*1000 ,handHull.lVec().data(),GL_DYNAMIC_DRAW);
   f->glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                   sizeof(std::pair<uint, uint>) * sourceFileLinesSize,
                   lines.data(), GL_DYNAMIC_DRAW);
@@ -142,9 +119,6 @@ void HandObject::init() {
   // fill triangles
   std::vector<std::pair<glm::vec3, glm::vec3>> vertexBufferTri;
   for (Triangle &tri : triangles) {
-    // vertexBufferTri.push_back({tri.getVertices()[0].position,tri.getVertices()[0].color});
-    // vertexBufferTri.push_back({tri.getVertices()[1].position,tri.getVertices()[1].color});
-    // vertexBufferTri.push_back({tri.getVertices()[2].position,tri.getVertices()[2].color});
     vertexBufferTri.push_back({tri.vertices[0]->position, tri.color});
     vertexBufferTri.push_back({tri.vertices[1]->position, tri.color});
     vertexBufferTri.push_back({tri.vertices[2]->position, tri.color});
@@ -153,8 +127,6 @@ void HandObject::init() {
   f->glBindVertexArray(VAO[2]);
 
   f->glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-  // f->glBufferData(GL_ARRAY_BUFFER,sizeof(Triangle) * 1000,
-  // triangles.data(),GL_DYNAMIC_DRAW);
   f->glBufferData(GL_ARRAY_BUFFER,
                   sizeof(std::pair<glm::vec3, glm::vec3>) *
                       vertexBufferTri.size(),
@@ -199,10 +171,11 @@ void HandObject::init() {
                            sizeof(std::pair<glm::vec3, glm::vec3>), 0);
   f->glEnableVertexAttribArray(wireframe_point_attribute);
 
-  f->glBindBuffer(GL_ARRAY_BUFFER, 0);         // unbid current VBO
-  f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // unbid current EBO
-  f->glBindVertexArray(0);                     // unbind current VAO
+  f->glBindBuffer(GL_ARRAY_BUFFER, 0);
+  f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  f->glBindVertexArray(0);
 
+  std::cout << "Finished init\n";
 }
 
 void HandObject::draw() {
@@ -220,8 +193,6 @@ void HandObject::draw() {
   // Ver isso!!
 
   // ViewMatrix set
-  
-  std::cout << "here\n";
 
   uint p0ID = program[0].getProgramId();
   f->glUseProgram(p0ID);
@@ -255,6 +226,7 @@ void HandObject::draw() {
   f->glUniformMatrix4fv(
       pmatrix2, 1, GL_FALSE,
       glm::value_ptr(currentScene->getCamera()->getProjMatrix()));
+  std::cout << "0\n";
 
   // POINTS
 
@@ -289,7 +261,8 @@ void HandObject::draw() {
 
   f->glBindVertexArray(0);
 
-  // TRIANGLES
+  std::cout << "1\n";
+  //// TRIANGLES
   f->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   f->glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
@@ -324,9 +297,11 @@ void HandObject::draw() {
   f->glBindBuffer(GL_ARRAY_BUFFER, 0);
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-  if (tree != nullptr && tree->isVisible()) {
-    tree->draw();
-  }
+  // if (tree != nullptr && tree->isVisible()) {
+  //   tree->draw();
+  // }
+
+  std::cout << "2\n";
 
   ////Circle
   int num_segments = 100;
@@ -336,7 +311,7 @@ void HandObject::draw() {
   float s = sinf(theta);
   float t;
 
-  float x = frames[currentFrame].radius; // we start at angle = 0
+  float x = 0.1; // frames[currentFrame].radius; // we start at angle = 0
   float y = 0;
   if (Misc::Util::almostZero(x, 10)) {
     return;
@@ -344,7 +319,7 @@ void HandObject::draw() {
   QVector<float> vector;
   vector.clear();
 
-  glm::vec3 center = frames[currentFrame].center;
+  glm::vec3 center = glm::vec3(0., 0., 0); // frames[currentFrame].center;
 
   for (int i = 0; i < num_segments; i++) {
     // apply translation
@@ -392,6 +367,8 @@ void HandObject::draw() {
 
   f->glBindVertexArray(0);
   f->glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+  std::cout << "hand draw\n";
 }
 
 void HandObject::restoreOriginal() { GLTriMesh::restoreOriginal(); }

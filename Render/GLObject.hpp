@@ -56,7 +56,7 @@ public:
   GLSimpleMesh(QOpenGLContext *context, Scene *_scene);
   GLSimpleMesh(const GLSimpleMesh &copyObj) = delete;
   GLSimpleMesh(GLSimpleMesh &&other) = delete;
-  ~GLSimpleMesh() = default;
+  ~GLSimpleMesh();
   virtual void draw();
   virtual void init();
 

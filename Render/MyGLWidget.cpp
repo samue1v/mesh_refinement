@@ -2,9 +2,9 @@
 // #include <QtImGui.h>
 #include <imgui.h>
 // #include <implot.h>
+#include "imgui_spectrum.h"
 #include <iostream>
 #include <unistd.h>
-#include "imgui_spectrum.h"
 
 std::unordered_map<int, ImGuiKey> IMGUI_helper::qtToImGuiKey = {
     {Qt::Key_Tab, ImGuiKey_Tab},
@@ -46,64 +46,86 @@ void IMGUI_helper::StyleColorsSpectrum() {
   ImVec4 *colors = style->Colors;
   colors[ImGuiCol_Text] = ImGui::ColorConvertU32ToFloat4(
       ImGui::Spectrum::GRAY800); // text on hovered controls is gray900
-  colors[ImGuiCol_TextDisabled] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY500);
-  colors[ImGuiCol_WindowBg] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY100);
+  colors[ImGuiCol_TextDisabled] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY500);
+  colors[ImGuiCol_WindowBg] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY100);
   colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
   colors[ImGuiCol_PopupBg] = ImGui::ColorConvertU32ToFloat4(
-      ImGui::Spectrum::GRAY50); // not sure about this. Note: applies to tooltips too.
-  colors[ImGuiCol_Border] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY300);
+      ImGui::Spectrum::GRAY50); // not sure about this. Note: applies to
+                                // tooltips too.
+  colors[ImGuiCol_Border] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY300);
   colors[ImGuiCol_BorderShadow] = ImGui::ColorConvertU32ToFloat4(
       ImGui::Spectrum::Static::NONE); // We don't want shadows. Ever.
   colors[ImGuiCol_FrameBg] = ImGui::ColorConvertU32ToFloat4(
-      ImGui::Spectrum::GRAY75); // this isnt right, spectrum does not do this, but it's
-                         // a good fallback
-  colors[ImGuiCol_FrameBgHovered] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY50);
-  colors[ImGuiCol_FrameBgActive] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY200);
+      ImGui::Spectrum::GRAY75); // this isnt right, spectrum does not do this,
+                                // but it's a good fallback
+  colors[ImGuiCol_FrameBgHovered] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY50);
+  colors[ImGuiCol_FrameBgActive] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY200);
   colors[ImGuiCol_TitleBg] = ImGui::ColorConvertU32ToFloat4(
-      ImGui::Spectrum::GRAY300); // those titlebar values are totally made up, spectrum
-                          // does not have this.
-  colors[ImGuiCol_TitleBgActive] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY200);
+      ImGui::Spectrum::GRAY300); // those titlebar values are totally made up,
+                                 // spectrum does not have this.
+  colors[ImGuiCol_TitleBgActive] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY200);
   colors[ImGuiCol_TitleBgCollapsed] =
       ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY400);
-  colors[ImGuiCol_MenuBarBg] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY100);
-  colors[ImGuiCol_ScrollbarBg] =
-      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY100); // same as regular background
-  colors[ImGuiCol_ScrollbarGrab] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY400);
+  colors[ImGuiCol_MenuBarBg] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY100);
+  colors[ImGuiCol_ScrollbarBg] = ImGui::ColorConvertU32ToFloat4(
+      ImGui::Spectrum::GRAY100); // same as regular background
+  colors[ImGuiCol_ScrollbarGrab] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY400);
   colors[ImGuiCol_ScrollbarGrabHovered] =
       ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY600);
   colors[ImGuiCol_ScrollbarGrabActive] =
       ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY700);
-  colors[ImGuiCol_CheckMark] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE500);
-  colors[ImGuiCol_SliderGrab] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY700);
+  colors[ImGuiCol_CheckMark] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE500);
+  colors[ImGuiCol_SliderGrab] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY700);
   colors[ImGuiCol_SliderGrabActive] =
       ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY800);
   colors[ImGuiCol_Button] = ImGui::ColorConvertU32ToFloat4(
-      ImGui::Spectrum::GRAY75); // match default button to ImGui::Spectrum's 'Action Button'.
-  colors[ImGuiCol_ButtonHovered] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY50);
-  colors[ImGuiCol_ButtonActive] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY200);
-  colors[ImGuiCol_Header] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE400);
-  colors[ImGuiCol_HeaderHovered] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE500);
-  colors[ImGuiCol_HeaderActive] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE600);
-  colors[ImGuiCol_Separator] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY400);
+      ImGui::Spectrum::GRAY75); // match default button to ImGui::Spectrum's
+                                // 'Action Button'.
+  colors[ImGuiCol_ButtonHovered] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY50);
+  colors[ImGuiCol_ButtonActive] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY200);
+  colors[ImGuiCol_Header] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE400);
+  colors[ImGuiCol_HeaderHovered] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE500);
+  colors[ImGuiCol_HeaderActive] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE600);
+  colors[ImGuiCol_Separator] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY400);
   colors[ImGuiCol_SeparatorHovered] =
       ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY600);
-  colors[ImGuiCol_SeparatorActive] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY700);
-  colors[ImGuiCol_ResizeGrip] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY400);
+  colors[ImGuiCol_SeparatorActive] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY700);
+  colors[ImGuiCol_ResizeGrip] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY400);
   colors[ImGuiCol_ResizeGripHovered] =
       ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY600);
   colors[ImGuiCol_ResizeGripActive] =
       ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::GRAY700);
-  colors[ImGuiCol_PlotLines] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE400);
+  colors[ImGuiCol_PlotLines] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE400);
   colors[ImGuiCol_PlotLinesHovered] =
       ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE600);
-  colors[ImGuiCol_PlotHistogram] = ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE400);
+  colors[ImGuiCol_PlotHistogram] =
+      ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE400);
   colors[ImGuiCol_PlotHistogramHovered] =
       ImGui::ColorConvertU32ToFloat4(ImGui::Spectrum::BLUE600);
-  colors[ImGuiCol_TextSelectedBg] =
-      ImGui::ColorConvertU32ToFloat4((ImGui::Spectrum::BLUE400 & 0x00FFFFFF) | 0x33000000);
+  colors[ImGuiCol_TextSelectedBg] = ImGui::ColorConvertU32ToFloat4(
+      (ImGui::Spectrum::BLUE400 & 0x00FFFFFF) | 0x33000000);
   colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
-  colors[ImGuiCol_NavHighlight] =
-      ImGui::ColorConvertU32ToFloat4((ImGui::Spectrum::GRAY900 & 0x00FFFFFF) | 0x0A000000);
+  colors[ImGuiCol_NavHighlight] = ImGui::ColorConvertU32ToFloat4(
+      (ImGui::Spectrum::GRAY900 & 0x00FFFFFF) | 0x0A000000);
   colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
   colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
   colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
@@ -126,18 +148,25 @@ MyGLWidget::MyGLWidget(QWidget *parent) {
 MyGLWidget::~MyGLWidget() {
 
   // f->glDeleteBuffers(1,&pointsVBO);
-  delete scene;
+  if (scene != nullptr) {
+    delete scene;
+  }
+  delete mainMenu;
   delete f;
   delete info;
 }
 
 void MyGLWidget::createScene(const MenuCommands::CreateSceneCMD &scene_cmd) {
-  makeCurrent();
+  // makeCurrent();
   if (scene != nullptr) {
     delete scene;
+    scene = nullptr;
+
+    std::cout << "deleted scene";
   }
   scene = new Scene(this, context(), scene_cmd);
-  doneCurrent();
+  std::cout << "Scene creation really finished\n";
+  // doneCurrent();
 }
 
 Scene *MyGLWidget::getScene() { return scene; }
@@ -188,9 +217,10 @@ void MyGLWidget::paintGL() {
   // QtImGui::newFrame();
 
   // Render scene here
-  //
   if (scene != nullptr) {
+    std::cout << "Rendering scene...\n";
     scene->render();
+    std::cout << "Scene rendered...\n";
   }
 
   mainMenu->render();
@@ -348,7 +378,7 @@ void MyGLWidget::mousePressEvent(QMouseEvent *evt) {
       float h = height();
       scene->mousePickRight(glm::vec3(virtualPos.x(), virtualPos.y(), 0.f), w,
                             h);
-      // scene->updateText();
+      //  scene->updateText();
     }
   }
   // evt->accept();

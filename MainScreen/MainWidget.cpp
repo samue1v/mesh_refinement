@@ -135,6 +135,9 @@ void MainWidget::ShowFileMenu() {
         std::string s = it->get<std::string>();
         if (ImGui::MenuItem(s.c_str())) {
           fileChosen(s);
+          std::cout << "Terminou file chosen\n";
+          std::cout << "Num objects = " << std::to_string(objList.size())
+                    << "\n";
         }
       }
     }
@@ -159,6 +162,8 @@ void MainWidget::openFile(const std::string &path) {
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       logChosenFile(filePathName);
       fileChosen(filePathName);
+      std::cout << "Terminou file chosen\n";
+      std::cout << "Num objects = " << std::to_string(objList.size()) << "\n";
     }
 
     // close
@@ -202,9 +207,9 @@ void MainWidget::fileChosen(const std::string &filePath) {
   cmd.transformation.scale = ScaleFactor;
   cmd.transformation.rotation = RotationAngle;
   glWidget->createScene(cmd);
-  for (int i = 0; i < glWidget->getScene()->getNumObjects(); i++) {
-    objList.push_back(glWidget->getScene()->getObjectName(i));
-  }
+  //for (int i = 0; i < glWidget->getScene()->getNumObjects(); i++) {
+  //  objList.push_back(glWidget->getScene()->getObjectName(i));
+  //}
   // notifyClear();
 }
 
