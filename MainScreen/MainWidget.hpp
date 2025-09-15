@@ -45,8 +45,8 @@ public:
   ImVec2 size;
   ImVec2 pos;
 
-private:
-  bool showMenu;
+  bool showSideMenu;
+  bool showMainMenu;
   bool showCharts;
   bool openDialog;
 

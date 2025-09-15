@@ -231,8 +231,10 @@ void MyGLWidget::paintGL() {
   }
 
   mainMenu->render();
-  for (ChartSubscriber *c : subscribers) {
-    c->draw();
+  if (mainMenu->showCharts) {
+    for (ChartSubscriber *c : subscribers) {
+      c->draw();
+    }
   }
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

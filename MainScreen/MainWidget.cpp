@@ -8,9 +8,9 @@
 using json = nlohmann::json;
 
 MainWidget::MainWidget(MyGLWidget *_glWidget, QOpenGLContext *context)
-    : GLDrawable(context), glWidget(_glWidget), showMenu(true),
-      openDialog(false), showCharts(true), RotationAngle(-1), ScaleFactor(-1),
-      step(1),
+    : GLDrawable(context), glWidget(_glWidget), showMainMenu(true),
+      showSideMenu(true), openDialog(false), showCharts(true),
+      RotationAngle(-1), ScaleFactor(-1), step(1),
       selectedPostProcessing(MenuCommands::PostProcessingApproach::None),
       selectedAnalytical(MenuCommands::MeshingApproach::None) {
   init();
@@ -18,19 +18,17 @@ MainWidget::MainWidget(MyGLWidget *_glWidget, QOpenGLContext *context)
 
 MainWidget::~MainWidget() {
   // clear charts
-
 }
 
 void MainWidget::init() {
-  size = ImVec2(glWidget->width()/6.f, glWidget->height() - 19);
+  size = ImVec2(glWidget->width() / 6.f, glWidget->height() - 19);
   pos = ImVec2(0, 19);
 }
 
 void MainWidget::render() { this->draw(); }
 
 void MainWidget::ShowSideMenuBar() {
-  ImGui::SetNextWindowSize(size,
-                           ImGuiCond_Always);
+  ImGui::SetNextWindowSize(size, ImGuiCond_Always);
   ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
   ImGui::Begin("Mesh Menu", nullptr,
                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
@@ -107,8 +105,8 @@ void MainWidget::ShowMainMenuBar() {
       ShowFileMenu();
       ImGui::EndMenu();
     }
-    if (ImGui::BeginMenu("Layout")) {
-      if (ImGui::Checkbox("Main Menu", &showMenu)) {
+    if (ImGui::BeginMenu("View")) {
+      if (ImGui::Checkbox("Side Menu", &showSideMenu)) {
       };
       if (ImGui::Checkbox("Chart Menu", &showCharts)) {
       };
@@ -150,6 +148,7 @@ void MainWidget::openFile(const std::string &path) {
     openDialog = false; // reset flag
     IGFD::FileDialogConfig config;
     config.path = path;
+    ImGui::SetNextWindowSize({static_cast<float>(glWidget->width()/2.), static_cast<float>(glWidget->height()/2.)});
     ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File",
                                             ".obj", config);
   }
@@ -208,7 +207,6 @@ void MainWidget::fileChosen(const std::string &filePath) {
   }
 }
 
-
 int MainWidget::getStep() { return step; }
 
 int MainWidget::getSmoothStep() { return step; }
@@ -219,8 +217,8 @@ void MainWidget::objListChosen(std::string name) {
 }
 
 void MainWidget::draw() {
-  // static bool show_demo_window = true;
-  // ImGui::ShowDemoWindow(&show_demo_window);
   MainWidget::ShowMainMenuBar();
-  MainWidget::ShowSideMenuBar();
+  if (showSideMenu) {
+    MainWidget::ShowSideMenuBar();
+  }
 }

@@ -35,11 +35,16 @@ void BarChart::clearChart() {
 void BarChart::draw() {
   ImGui::SetNextWindowPos(pos);
   ImGui::SetNextWindowSize(size);
-  ImGui::Begin("Radius Ratio", nullptr,
-               ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
-  if (ImPlot::BeginPlot("Radius ratio", size, 0)) {
-    ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0,*std::max_element(barData.begin(),barData.end()), ImPlotCond_Always);
-    ImPlot::PlotBars("Score", barData.data(), barData.size(), BAR_WIDTH, 1);
+  ImGui::Begin("##RadiusR", nullptr,
+               ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                   ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_None |
+                   ImGuiWindowFlags_NoTitleBar);
+  if (ImPlot::BeginPlot("Radius Ratio", size, ImPlotFlags_NoLegend)) {
+    ImPlot::SetupAxisLimits(ImAxis_X1, 0.0,
+                            *std::max_element(barData.begin(), barData.end()),
+                            ImPlotCond_Always);
+    ImPlot::PlotBars("Score", barData.data(), barData.size(), BAR_WIDTH, 1,
+                     ImPlotBarsFlags_Horizontal);
     ImPlot::EndPlot();
   }
   ImGui::End();
