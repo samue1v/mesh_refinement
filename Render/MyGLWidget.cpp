@@ -138,6 +138,7 @@ MyGLWidget::MyGLWidget(QWidget *parent) {
   setFocusPolicy(Qt::StrongFocus);
   setAttribute(Qt::WA_InputMethodEnabled, true);
   setMouseTracking(true);
+  ctx = ImPlot::CreateContext();
   scene = nullptr;
   f = nullptr;
 
@@ -153,6 +154,8 @@ MyGLWidget::~MyGLWidget() {
   for (ChartSubscriber *subs : subscribers) {
     delete subs;
   }
+
+  ImPlot::DestroyContext(ctx); 
   delete mainMenu;
   delete f;
   delete info;
@@ -201,11 +204,16 @@ void MyGLWidget::initializeGL() {
   mainMenu = new MainWidget(this, context());
 
   subscribe(
-      new BarChart({mainMenu->size.x,
+      new BarChart(ctx, {mainMenu->size.x,
                     static_cast<float>(this->height() - this->height() / 4.)},
                    {static_cast<float>(this->width() * 2.5 / 6.),
                     static_cast<float>(this->height() / 4.)}));
 
+  subscribe(
+      new PieChart(ctx, { mainMenu->size.x + static_cast<float>(this->width() * 2.5 / 6.)+1 , 
+                    static_cast<float>(this->height() - this->height() / 4.)},
+                   {static_cast<float>(this->width() * 2.5 / 6.),
+                    static_cast<float>(this->height() / 4.)}));
   info = new InfoBox(this);
   info->move({this->width() - info->width(), static_cast<int>(20)});
 

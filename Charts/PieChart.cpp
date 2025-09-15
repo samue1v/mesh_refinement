@@ -1,185 +1,73 @@
 #include "PieChart.hpp"
+#include <algorithm>
+#include <iostream>
 
-PieChart::PieChart(QGraphicsItem *parent , Qt::WindowFlags wFlags) : QChart(parent,wFlags){
-  goodCount = 0;
-  avgCount = 0;
-  badCount = 0;
-  pieSeries = new QPieSeries();
-
-  QColor greenColor = QColor(112, 250, 126);
-  QColor yellowColor = QColor(198, 184, 0);
-  QColor redColor = QColor(255, 38, 0);
-
-  goodSlice = new QPieSlice(); 
-  goodSlice->setPen(QPen(greenColor));
-  goodSlice->setBrush(QBrush(greenColor));
-  goodSlice->setLabel("Good");
-
-  //connect(goodSlice,&QPieSlice::hovered,this,&PieChart::goodHovered); 
-
-  
-  avgSlice = new QPieSlice(); 
-  avgSlice->setPen(QPen(yellowColor));
-  avgSlice->setBrush(QBrush(yellowColor));
-  avgSlice->setLabel("Average");
-  
-  //connect(avgSlice,&QPieSlice::hovered,this,&PieChart::avgHovered); 
-
-  
-  badSlice = new QPieSlice();
-  badSlice->setPen(QPen(redColor));
-  badSlice->setBrush(QBrush(redColor));
-  badSlice->setLabel("Bad");
-
-  //connect(badSlice,&QPieSlice::hovered,this,&PieChart::badHovered); 
-
-  
-  pieSeries->append(goodSlice);
-  pieSeries->append(avgSlice);
-  pieSeries->append(badSlice);
-
-
-  
-  
-  
-  addSeries(pieSeries);
-  setTitle("Radius Ratio");
+PieChart::PieChart(ImPlotContext *ctx, const ImVec2 &_pos, const ImVec2 &_size)
+    : pos(_pos), size(_size), pieData(4, 0) {
+  ImPlot::SetCurrentContext(ctx);
 }
 
-PieChart::~PieChart(){
-  delete pieSeries;
-  delete goodSlice;
-  delete avgSlice;
-  delete badSlice;
+PieChart::~PieChart() {}
+
+void PieChart::appendColor(float score) {
+  if (score >= 1) {
+    score = 0.99;
+  }
+  dataHistory.push_back(score);
+  int part = score / 0.25;
+  pieData[part] += 1;
 }
 
-void PieChart::appendColor(float score){
-
-
-
-  scoreHistory.push_back(score);
-  if(score < 0.4){
-    ++badCount;
-    pieSeries->take(badSlice);
-    badSlice->setValue(badCount); 
-    pieSeries->append(badSlice); 
-    
-  }
-  
-  else if(score >= 0.4 && score < 0.7){
-    ++avgCount;
-    pieSeries->take(avgSlice);
-    avgSlice->setValue(avgCount); 
-    pieSeries->append(avgSlice);
-    
-  }
-
-  else if(score >= 0.7 && score <= 1.1){
-    ++goodCount;
-    pieSeries->take(goodSlice);
-    goodSlice->setValue(goodCount); 
-    pieSeries->append(goodSlice);
-    
-    
-  }
-  badHovered(true);
-  avgHovered(true);
-  goodHovered(true);
-
+void PieChart::popColor() {
+  float lastScore = dataHistory.back();
+  int part = lastScore / 0.25;
+  pieData[part] = std::max(pieData[part] - 1, 0);
+  dataHistory.pop_back();
 }
 
-void PieChart::popColor(){
-  if(scoreHistory.size() == 0){//defaul value
-    return;
-  }
-  float lastScore = scoreHistory.back();
-  scoreHistory.pop_back();
-  if(lastScore < 0.4){
-    --badCount;
-    pieSeries->take(badSlice);
-    badSlice->setValue(badCount);
-    pieSeries->append(badSlice); 
-    
-  }
-  
-  else if(lastScore >= 0.4 && lastScore < 0.7){
-    --avgCount;
-    pieSeries->take(avgSlice);
-    avgSlice->setValue(avgCount); 
-    pieSeries->append(avgSlice);
-    
-  }
-
-  else if(lastScore >= 0.7 && lastScore <= 1.1){
-    --goodCount;
-    pieSeries->take(goodSlice);
-    goodSlice->setValue(goodCount); 
-    pieSeries->append(goodSlice);
-    
-  }
-  badHovered(true);
-  avgHovered(true);
-  goodHovered(true);
-  
-  
-
+void PieChart::clearChart() {
+  std::fill(pieData.begin(), pieData.end(), 0);
+  dataHistory.clear();
 }
 
+void PieChart::draw() {
+  static ImVec4 my_colors[4] = {
+      ImVec4(1.0f, 0.0f, 0.0f, 1.0f),  // red
+      ImVec4(1.0f, 0.65f, 0.0f, 1.0f), // orange
+      ImVec4(1.0f, 1.0f, 0.0f, 1.0f),  // yellow
+      ImVec4(0.0f, 1.0f, 0.0f, 1.0f),  // green
+  };
 
-void PieChart::goodHovered(bool state){
-    goodSlice->setExploded(state);
-    goodSlice->setLabel(QString("Good:").append(QString("%1%").arg(100*calcPercentage(goodCount), 0, 'f', 1)));
-    goodSlice->setLabelVisible(state);
+  static int MyCMap = ImPlot::AddColormap("MyColormap", my_colors, IM_ARRAYSIZE(my_colors));
 
-}
+  ImGui::SetNextWindowPos(pos);
+  ImGui::SetNextWindowSize(size);
 
-void PieChart::avgHovered(bool state){
-    avgSlice->setExploded(state);
-    avgSlice->setLabel(QString("Average:").append(QString("%1%").arg(100*calcPercentage(avgCount), 0, 'f', 1)));
-    avgSlice->setLabelVisible(state);
-}
+  static const char *labels1[] = {"Poor", "Fair", "Good", "Very good"};
+  static ImU32 colors[] = {IM_COL32(255, 0, 0, 255), IM_COL32(255, 165, 0, 255),
+                           IM_COL32(255, 255, 0, 255),
+                           IM_COL32(0, 255, 0, 255)};
+  static ImPlotPieChartFlags flags = ImPlotPieChartFlags_Exploding;
 
-void PieChart::badHovered(bool state){
-    badSlice->setExploded(state);
-    badSlice->setLabel(QString("Bad:").append(QString("%1%").arg(100*calcPercentage(badCount), 0, 'f', 1)));
-    badSlice->setLabelVisible(state);
-}
+  ImGui::Begin("##RadiusP", nullptr,
+               ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                   ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
+  ImPlot::PushColormap(MyCMap);
+  if (ImPlot::BeginPlot("##Pie1", size,
+                        ImPlotFlags_Equal | ImPlotFlags_NoMouseText)) {
 
-void PieChart::clearChart(){
+    // No need for axes for a pie chart, but you can keep limits if you want
+    ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_NoDecorations,
+                      ImPlotAxisFlags_NoDecorations);
+    ImPlot::SetupAxesLimits(0, 1, 0, 1);
 
+    // Draw pie chart
+    ImPlot::PlotPieChart(labels1, pieData.data(), 4, 0.5, 0.5, 0.1, "%.2f", 90,
+                         flags);
 
-
-  scoreHistory.clear();
-  
-  pieSeries->take(goodSlice);
-  pieSeries->take(avgSlice);
-  pieSeries->take(badSlice);
-
-  goodSlice->setValue(0); 
-  goodCount = 0;
-
-
-  avgSlice->setValue(0); 
-  avgCount = 0;
-
-
-  badSlice->setValue(0); 
-  badCount = 0;
-  
-  pieSeries->append(goodSlice);
-  pieSeries->append(avgSlice);
-  pieSeries->append(badSlice); 
-
-
-  badHovered(true);
-  avgHovered(true);
-  goodHovered(true);
-
-}
-
-double PieChart::calcPercentage(int sliceVal){
-  if(scoreHistory.size() == 0){
-    return 0.;
+    ImPlot::EndPlot();
   }
-  return (double)sliceVal/(double)scoreHistory.size();
+  ImPlot::PopColormap();
+
+  ImGui::End();
 }

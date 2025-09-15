@@ -1,46 +1,27 @@
 #ifndef PIE_CHART_H
 #define PIE_CHART_H
-
-#include <QChart>
-#include <QPieSeries>
-#include <QPieSlice>
-#include <QChart>
-#include <QChartView>
-#include <QGraphicsItem>
-#include <Qt>
-#include <vector>
-#include <iostream>
 #include "ChartSubscriber.hpp"
+#include "imgui.h"
+#include "implot.h"
+#include <QWidget>
+#include <algorithm>
+#include <vector>
 
-
-
-
-class PieChart : public QChart, public ChartSubscriber {
-Q_OBJECT
+class PieChart : public ChartSubscriber {
 public:
-  PieChart(QGraphicsItem *parent = nullptr, Qt::WindowFlags wFlags = Qt::WindowFlags());
+  PieChart(ImPlotContext * ctx, const ImVec2 &_pos, const ImVec2 &_size);
   ~PieChart();
 
 public slots:
-  void appendColor(float v) override;
+  void appendColor(float score) override;
   void popColor() override;
   void clearChart() override;
-  void goodHovered(bool state);
-  void avgHovered(bool state);
-  void badHovered(bool state);
+  void draw() override;
 
-public:
-  QPieSeries * pieSeries;
-  QPieSlice * goodSlice;
-  QPieSlice * avgSlice;
-  QPieSlice * badSlice;
-  int goodCount;
-  int avgCount;
-  int badCount;
-  std::vector<float> scoreHistory;
-
-private:
-  double calcPercentage(int val);
+  std::vector<int> pieData;
+  std::vector<float> dataHistory;
+  ImVec2 pos;
+  ImVec2 size;
 };
 
-#endif //PIE_CHART_H
+#endif

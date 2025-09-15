@@ -9,6 +9,7 @@
 #include "../MainScreen/MainWidget.hpp"
 #include "../MainScreen/Publisher.hpp"
 #include "../Charts/BarChart.hpp"
+#include "../Charts/PieChart.hpp"
 #include "InfoBox.hpp"
 #include "Scene.hpp"
 #include <QDateTime>
@@ -69,6 +70,7 @@ private:
 
 public:
   QOpenGLFunctions_3_3_Core *f;
+  ImPlotContext * ctx;
 };
 
 #endif

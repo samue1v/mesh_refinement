@@ -4,19 +4,18 @@
 
 #define BAR_WIDTH 0.5f
 
-BarChart::BarChart(const ImVec2 &_pos, const ImVec2 &_size)
+BarChart::BarChart(ImPlotContext * ctx, const ImVec2 &_pos, const ImVec2 &_size)
     : pos(_pos), size(_size), barData(10, 0) {
-  ctx = ImPlot::CreateContext();
   ImPlot::SetCurrentContext(ctx);
 }
 
-BarChart::~BarChart() { ImPlot::DestroyContext(ctx); }
+BarChart::~BarChart() {}
 
 void BarChart::appendColor(float score) {
   if (score >= 1) {
     score = 0.99;
   }
-  barData.push_back(score);
+  dataHistory.push_back(score);
   barData[int((score) * 10)] += 1;
 }
 

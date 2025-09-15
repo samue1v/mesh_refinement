@@ -9,7 +9,7 @@
 
 class BarChart : public ChartSubscriber {
 public:
-  BarChart(const ImVec2 &_pos, const ImVec2 &_size);
+  BarChart(ImPlotContext *ctx, const ImVec2 &_pos, const ImVec2 &_size);
   ~BarChart();
 
 public slots:
@@ -20,7 +20,6 @@ public slots:
 
   std::vector<int> barData;
   std::vector<float> dataHistory;
-  ImPlotContext *ctx;
   ImVec2 pos;
   ImVec2 size;
 };
