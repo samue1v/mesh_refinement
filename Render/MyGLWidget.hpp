@@ -3,10 +3,12 @@
 
 #include <QOpenGLWidget>
 #include <QWidget>
-// #include <QOpenGLFunctions_3_3_Core>
 
+#include "../Charts/ChartSubscriber.hpp"
 #include "../Common/DrawCommands.hpp"
 #include "../MainScreen/MainWidget.hpp"
+#include "../MainScreen/Publisher.hpp"
+#include "../Charts/BarChart.hpp"
 #include "InfoBox.hpp"
 #include "Scene.hpp"
 #include <QDateTime>
@@ -31,7 +33,7 @@ public:
   static void StyleColorsSpectrum();
 };
 
-class MyGLWidget : public QOpenGLWidget {
+class MyGLWidget : public QOpenGLWidget, public Publisher {
   Q_OBJECT
 
 public:
@@ -46,6 +48,11 @@ public:
   void initializeGL() override;
   void paintGL() override;
   void resizeGL(int w, int h) override;
+  void subscribe(ChartSubscriber *) override;
+  void notifyNext(float score) override;
+  void notifyPrevious() override;
+  void notifyClear() override;
+
   Scene *getScene();
   void createScene(const MenuCommands::CreateSceneCMD &scene_cmd);
   void setVisibleObjects(std::string name);
@@ -58,6 +65,7 @@ private:
   Scene *scene;
   InfoBox *info;
   MainWidget *mainMenu;
+  std::vector<ChartSubscriber *> subscribers;
 
 public:
   QOpenGLFunctions_3_3_Core *f;

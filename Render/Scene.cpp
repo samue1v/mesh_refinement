@@ -17,22 +17,17 @@ Scene::Scene(MyGLWidget *glw, QOpenGLContext *context,
     objects.push_back(h);
   }
   currentObj = objects.at(0);
-  std::cout << "Finished Scene constructor\n";
-  std::cout << currentObj->name << "\n";
   // textRenderer = new TextRender(this, context);
   // textRenderer->init();
   // updateText();
 }
 
 Scene::~Scene() {
-  std::cout << "Deleting scene\n";
   if (f != nullptr) {
     delete f;
   }
   for (HandObject *o : objects) {
-    std::cout << "Deleting obj: " << o->name << ".\n";
     delete o;
-    std::cout << "Deleted\n";
   }
   // delete textRenderer;
 }
@@ -118,10 +113,8 @@ int Scene::addVertex(Vertex p) {
 }
 
 void Scene::render() {
-  std::cout << "Starting render\n";
   for (GLTriMesh *obj : objects) {
     if (obj->isVisible()) {
-      std::cout << "Visivel\n";
       obj->draw();
     }
   }
@@ -150,10 +143,9 @@ void Scene::left_press(int step) {
   for (GLTriMesh *o : objects) {
     if (o->isVisible()) {
       for (int i = 0; i < step; i++) {
-        // if (o->previousFrame()) {
-        //   glWidget->notifyPrevious();
-        // }
-        o->previousFrame();
+        if (o->previousFrame()) {
+          glWidget->notifyPrevious();
+        }
       }
     }
   }
@@ -163,11 +155,9 @@ void Scene::right_press(int step) {
   for (GLTriMesh *o : objects) {
     if (o->isVisible()) {
       for (int i = 0; i < step; i++) {
-        // if (o->nextFrame()) {
-        //   float score = o->getCurrentTriangle().classify();
-        //   glWidget->notifyNext(score);
-        // }
-        o->nextFrame();
+        if (o->nextFrame()) {
+          glWidget->notifyNext(o->getCurrentTriangle().score);
+        }
       }
     }
   }

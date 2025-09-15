@@ -10,6 +10,7 @@ using json = nlohmann::json;
 MainWidget::MainWidget(MyGLWidget *_glWidget, QOpenGLContext *context)
     : GLDrawable(context), glWidget(_glWidget), showMenu(true),
       openDialog(false), showCharts(true), RotationAngle(-1), ScaleFactor(-1),
+      step(1),
       selectedPostProcessing(MenuCommands::PostProcessingApproach::None),
       selectedAnalytical(MenuCommands::MeshingApproach::None) {
   init();
@@ -17,19 +18,20 @@ MainWidget::MainWidget(MyGLWidget *_glWidget, QOpenGLContext *context)
 
 MainWidget::~MainWidget() {
   // clear charts
-  for (ChartSubscriber *subs : subscribers) {
-    delete subs;
-  }
+
 }
 
-void MainWidget::init() {}
+void MainWidget::init() {
+  size = ImVec2(glWidget->width()/6.f, glWidget->height() - 19);
+  pos = ImVec2(0, 19);
+}
 
 void MainWidget::render() { this->draw(); }
 
 void MainWidget::ShowSideMenuBar() {
-  ImGui::SetNextWindowSize(ImVec2(300, glWidget->height() - MainMenuHeight),
+  ImGui::SetNextWindowSize(size,
                            ImGuiCond_Always);
-  ImGui::SetNextWindowPos(ImVec2(0, MainMenuHeight), ImGuiCond_Always);
+  ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
   ImGui::Begin("Mesh Menu", nullptr,
                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
   if (ImGui::TreeNodeEx("Geometric transforms",
@@ -135,9 +137,6 @@ void MainWidget::ShowFileMenu() {
         std::string s = it->get<std::string>();
         if (ImGui::MenuItem(s.c_str())) {
           fileChosen(s);
-          std::cout << "Terminou file chosen\n";
-          std::cout << "Num objects = " << std::to_string(objList.size())
-                    << "\n";
         }
       }
     }
@@ -162,8 +161,6 @@ void MainWidget::openFile(const std::string &path) {
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       logChosenFile(filePathName);
       fileChosen(filePathName);
-      std::cout << "Terminou file chosen\n";
-      std::cout << "Num objects = " << std::to_string(objList.size()) << "\n";
     }
 
     // close
@@ -199,7 +196,6 @@ void MainWidget::logChosenFile(const std::string &name) {
 
 void MainWidget::fileChosen(const std::string &filePath) {
 
-  std::cout << filePath << "\n";
   MenuCommands::CreateSceneCMD cmd;
   cmd.objPath = filePath;
   cmd.MeshApproach = selectedAnalytical;
@@ -210,41 +206,15 @@ void MainWidget::fileChosen(const std::string &filePath) {
   for (int i = 0; i < glWidget->getScene()->getNumObjects(); i++) {
     objList.push_back(glWidget->getScene()->getObjectName(i));
   }
-  // notifyClear();
 }
 
-void MainWidget::subscribe(ChartSubscriber *chart) {
-  subscribers.push_back(chart);
-}
 
-void MainWidget::notifyNext(float score) {
-  for (ChartSubscriber *s : subscribers) {
-    s->appendColor(score);
-  }
-}
+int MainWidget::getStep() { return step; }
 
-void MainWidget::notifyPrevious() {
-  for (ChartSubscriber *s : subscribers) {
-    s->popColor();
-  }
-}
-
-void MainWidget::notifyClear() {
-  for (ChartSubscriber *s : subscribers) {
-    s->clearChart();
-  }
-}
-
-int MainWidget::getStep() {
-  return step; 
-}
-
-int MainWidget::getSmoothStep() {
-  return step;
-}
+int MainWidget::getSmoothStep() { return step; }
 
 void MainWidget::objListChosen(std::string name) {
-  notifyClear();
+  glWidget->notifyClear();
   glWidget->setVisibleObjects(name);
 }
 

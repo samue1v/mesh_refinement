@@ -138,7 +138,6 @@ MyGLWidget::MyGLWidget(QWidget *parent) {
   setFocusPolicy(Qt::StrongFocus);
   setAttribute(Qt::WA_InputMethodEnabled, true);
   setMouseTracking(true);
-  info = new InfoBox(this);
   scene = nullptr;
   f = nullptr;
 
@@ -151,6 +150,9 @@ MyGLWidget::~MyGLWidget() {
   if (scene != nullptr) {
     delete scene;
   }
+  for (ChartSubscriber *subs : subscribers) {
+    delete subs;
+  }
   delete mainMenu;
   delete f;
   delete info;
@@ -161,11 +163,10 @@ void MyGLWidget::createScene(const MenuCommands::CreateSceneCMD &scene_cmd) {
   if (scene != nullptr) {
     delete scene;
     scene = nullptr;
-
-    std::cout << "deleted scene";
+    notifyClear();
   }
   scene = new Scene(this, context(), scene_cmd);
-  std::cout << "Scene creation really finished\n";
+
   // doneCurrent();
 }
 
@@ -199,6 +200,15 @@ void MyGLWidget::initializeGL() {
 
   mainMenu = new MainWidget(this, context());
 
+  subscribe(
+      new BarChart({mainMenu->size.x,
+                    static_cast<float>(this->height() - this->height() / 4.)},
+                   {static_cast<float>(this->width() * 2.5 / 6.),
+                    static_cast<float>(this->height() / 4.)}));
+
+  info = new InfoBox(this);
+  info->move({this->width() - info->width(), static_cast<int>(20)});
+
   // widgetToPhoto();
 }
 
@@ -214,20 +224,17 @@ void MyGLWidget::paintGL() {
   ImGui::NewFrame();
 
   f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  // QtImGui::newFrame();
 
   // Render scene here
   if (scene != nullptr) {
-    std::cout << "Rendering scene...\n";
     scene->render();
-    std::cout << "Scene rendered...\n";
   }
 
   mainMenu->render();
-  // ImGui::ShowDemoWindow();
-
+  for (ChartSubscriber *c : subscribers) {
+    c->draw();
+  }
   ImGui::Render();
-  // QtImGui::render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   ImGui::EndFrame();
 }
@@ -408,6 +415,28 @@ void MyGLWidget::mouseMoveEvent(QMouseEvent *evt) {
 void MyGLWidget::setVisibleObjects(std::string name) {
   scene->setVisible(name);
   // updateWidget();
+}
+
+void MyGLWidget::subscribe(ChartSubscriber *chart) {
+  subscribers.push_back(chart);
+}
+
+void MyGLWidget::notifyNext(float score) {
+  for (ChartSubscriber *s : subscribers) {
+    s->appendColor(score);
+  }
+}
+
+void MyGLWidget::notifyPrevious() {
+  for (ChartSubscriber *s : subscribers) {
+    s->popColor();
+  }
+}
+
+void MyGLWidget::notifyClear() {
+  for (ChartSubscriber *s : subscribers) {
+    s->clearChart();
+  }
 }
 
 // void MyGLWidget::widgetToPhoto() {

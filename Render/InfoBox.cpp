@@ -8,7 +8,7 @@ InfoBox::InfoBox(QWidget * parent) : QWidget(parent){
   p2Label = new QLabel("dadad");
   scoreLabel = new QLabel("dadad");
 
-  setFixedSize(parent->width()/3.f,parent->height()/3.f);
+  setFixedSize(parent->width()/5.f,parent->height()/5.f);
   setStyleSheet("background-color: rgba(255, 255, 255, 0.5);border: 1px solid rgba(50, 20, 20, .6);");
 
 

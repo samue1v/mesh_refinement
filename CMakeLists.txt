@@ -33,9 +33,8 @@ qt_add_executable(mesh main.cpp
                   Logic/Util.cpp
                   Logic/File.cpp
                   MainScreen/MainWidget.cpp
-                  #Charts/BarChart.cpp
+                  Charts/BarChart.cpp
                   #Charts/PieChart.cpp
-                  #Charts/BarPlot.cpp
                   Common/DrawCommands.hpp
                   External/imgui/imgui.cpp
                   External/imgui/imgui_draw.cpp

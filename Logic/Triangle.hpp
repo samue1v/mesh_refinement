@@ -40,6 +40,7 @@ public:
   std::array<Vertex*, 3> vertices;
   int indexes[3];
   glm::vec3 color;
+  float score;
   
 };
 

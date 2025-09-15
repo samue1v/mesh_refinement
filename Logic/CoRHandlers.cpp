@@ -110,18 +110,14 @@ GLSimpleMesh *PCAInverseHandler::handle(GLSimpleMesh *request) {
 
   // transform and reclassify
   for (int i = 0; i < triangles->size(); i++) {
-    // triangles->at(i).getVertices()[0]->position =
-    // transformMatrix * (triangles->at(i).getVertices()[0]->position) +
     triangles->at(i).vertices[0]->position =
         transformMatrix * (triangles->at(i).vertices[0]->position) +
         mean->toVec3();
-    // triangles->at(i).getVertices()[1]->position =
-    // transformMatrix * (triangles->at(i).getVertices()[1]->position) +
+
     triangles->at(i).vertices[1]->position =
         transformMatrix * (triangles->at(i).vertices[1]->position) +
         mean->toVec3();
-    // triangles->at(i).getVertices()[2]->position =
-    // transformMatrix * (triangles->at(i).getVertices()[2]->position) +
+
     triangles->at(i).vertices[2]->position =
         transformMatrix * (triangles->at(i).vertices[2]->position) +
         mean->toVec3();
@@ -129,9 +125,6 @@ GLSimpleMesh *PCAInverseHandler::handle(GLSimpleMesh *request) {
     float score = triangles->at(i).classify();
     glm::vec3 color = Triangle::getColorFromGradient(score);
 
-    // triangles->at(i).getVertices()[0]->color = color;
-    // triangles->at(i).getVertices()[1]->color = color;
-    // triangles->at(i).getVertices()[2]->color = color;
     triangles->at(i).vertices[0]->color = color;
     triangles->at(i).vertices[1]->color = color;
     triangles->at(i).vertices[2]->color = color;
@@ -229,7 +222,7 @@ GLSimpleMesh *TriangulationHandler::handle(GLSimpleMesh *request) {
   //}
   classifyTtriangles();
   prepareFrames();
-  debug();
+  //debug();
   adjList.clear();
   return AbsHandler::handle(request);
 }
@@ -276,18 +269,8 @@ void TriangulationHandler::makeTriangulation(GLTriMesh *obj) {
     Triangle t(currentEdge.first, i, currentEdge.second,
                points->at(currentEdge.first), points->at(i),
                points->at(currentEdge.second));
-    // float score = t.classify();
-    triangles->push_back(t);
 
-    // newFrame.TriangleEnd += 1;
-    // newFrame.center = computeCircunsCenter(
-    //     points->at(currentEdge.first).position, points->at(i).position,
-    //     points->at(currentEdge.second)
-    //         .position); // computeRightVertex(currentEdge);
-    // newFrame.radius = computeCircunsRadius(
-    //     points->at(currentEdge.first).position,
-    //     newFrame.center); // computeRightTriangleHeight(currentEdge);
-    // obj->addFrame(newFrame);
+    triangles->push_back(t);
   }
 }
 

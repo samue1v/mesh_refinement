@@ -8,7 +8,6 @@ HandObject::HandObject(Scene *scene, QOpenGLContext *context)
 }
 
 HandObject::~HandObject() {
-  std::cout << "HandObject destructor\n";
   if (tree != nullptr) {
     delete tree;
   }
@@ -177,18 +176,12 @@ void HandObject::init() {
   f->glBindBuffer(GL_ARRAY_BUFFER, 0);
   f->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   f->glBindVertexArray(0);
-
-  std::cout << "Finished init\n";
 }
 
 void HandObject::draw() {
 
-  // std::cout<<"Drawing...\n";
   f->glPointSize(4);
   f->glLineWidth(1);
-
-  // f->glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-  // Ver isso!!
 
   // ViewMatrix set
 
@@ -224,7 +217,24 @@ void HandObject::draw() {
   f->glUniformMatrix4fv(
       pmatrix2, 1, GL_FALSE,
       glm::value_ptr(currentScene->getCamera()->getProjMatrix()));
-  std::cout << "0\n";
+
+  //// TRIANGLES
+  f->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+  f->glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+
+  f->glBindVertexArray(VAO[2]);
+
+  f->glUseProgram(program[0].getProgramId());
+
+  int trianglesCount =
+      frames[currentFrame].TriangleEnd - frames[currentFrame].TriangleBegin;
+  f->glDrawArrays(GL_TRIANGLES, frames[currentFrame].TriangleBegin * 3,
+                  trianglesCount * 3);
+
+  f->glBindVertexArray(0);
+
+  f->glClear(GL_DEPTH_BUFFER_BIT);
 
   // POINTS
 
@@ -255,22 +265,6 @@ void HandObject::draw() {
 
   f->glBindVertexArray(0);
 
-  //// TRIANGLES
-  f->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-  f->glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-
-  f->glBindVertexArray(VAO[2]);
-
-  f->glUseProgram(program[0].getProgramId());
-
-  int trianglesCount =
-      frames[currentFrame].TriangleEnd - frames[currentFrame].TriangleBegin;
-  f->glDrawArrays(GL_TRIANGLES, frames[currentFrame].TriangleBegin * 3,
-                  trianglesCount * 3);
-
-  f->glBindVertexArray(0);
-
   // wireframe
 
   f->glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -294,7 +288,6 @@ void HandObject::draw() {
     tree->draw();
   }
 
-
   ////Circle
   int num_segments = 100;
 
@@ -303,7 +296,7 @@ void HandObject::draw() {
   float s = sinf(theta);
   float t;
 
-  float x = 0.1; // frames[currentFrame].radius; // we start at angle = 0
+  float x = frames[currentFrame].radius; // we start at angle = 0
   float y = 0;
   if (Misc::Util::almostZero(x, 10)) {
     return;
@@ -311,7 +304,7 @@ void HandObject::draw() {
   QVector<float> vector;
   vector.clear();
 
-  glm::vec3 center = glm::vec3(0., 0., 0); // frames[currentFrame].center;
+  glm::vec3 center = frames[currentFrame].center;
 
   for (int i = 0; i < num_segments; i++) {
     // apply translation
@@ -359,8 +352,6 @@ void HandObject::draw() {
 
   f->glBindVertexArray(0);
   f->glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-  std::cout << "hand draw\n";
 }
 
 void HandObject::restoreOriginal() { GLTriMesh::restoreOriginal(); }

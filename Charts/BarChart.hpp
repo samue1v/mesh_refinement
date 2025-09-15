@@ -1,40 +1,28 @@
 #ifndef BAR_CHART_H
 #define BAR_CHART_H
+#include "ChartSubscriber.hpp"
+#include "imgui.h"
+#include "implot.h"
 #include <QWidget>
-#include <QBrush>
-#include <QColor>
-#include <QVector>
 #include <algorithm>
-#include "../qcustomplot/qcustomplot.h"
+#include <vector>
 
-class BarChart : public QCPBars{
-  Q_OBJECT
-    public:
-    BarChart(QCPAxis *keyAxis, QCPAxis *valueAxis);
-    ~BarChart();
+class BarChart : public ChartSubscriber {
+public:
+  BarChart(const ImVec2 &_pos, const ImVec2 &_size);
+  ~BarChart();
 
-    public slots:
-    //works like a facede, dont inherit from Chart but takes part on the chain
-    void appendColor(float score);
-    void popColor();
-    void clearChart();
+public slots:
+  void appendColor(float score) override;
+  void popColor() override;
+  void clearChart() override;
+  void draw() override;
 
-    public:
-    
-    void draw(QCPPainter *painter) override;
-
-
-  
-    QVector<double> barX,barY;
-    QVector<QBrush> brushes;
-    QVector<QColor> colors;
-    std::vector<float> scoreHistory;
-
-
-
-    
-
-
+  std::vector<int> barData;
+  std::vector<float> dataHistory;
+  ImPlotContext *ctx;
+  ImVec2 pos;
+  ImVec2 size;
 };
 
 #endif
