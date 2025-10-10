@@ -11,7 +11,7 @@ GLDrawable::GLDrawable(QOpenGLContext *context) : visibility(true) {
   }
 }
 
-GLDrawable::~GLDrawable() { std::cout << "GLDrawable destructor\n"; }
+GLDrawable::~GLDrawable() {}
 
 bool GLDrawable::isVisible() { return visibility; }
 
@@ -21,7 +21,6 @@ GLSimpleMesh::GLSimpleMesh(QOpenGLContext *context, Scene *_currentScene)
     : GLDrawable(context), baseHandler(nullptr), currentScene(_currentScene) {}
 
 GLSimpleMesh::~GLSimpleMesh() {
-  std::cout << "GLSimpleMesh destructor\n";
   if (baseHandler != nullptr) {
     delete baseHandler;
   }
@@ -217,10 +216,7 @@ void GLSimpleMesh::draw() {
 GLTriMesh::GLTriMesh(Scene *scene, QOpenGLContext *context)
     : GLSimpleMesh(context, scene) {}
 
-GLTriMesh::~GLTriMesh() {
-
-  std::cout << "GLTriMesh destructor\n";
-}
+GLTriMesh::~GLTriMesh() {}
 
 void GLTriMesh::init() {}
 

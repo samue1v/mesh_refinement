@@ -31,14 +31,26 @@ void PieChart::clearChart() {
 }
 
 void PieChart::draw() {
+
+  float total = 0;
+  for (int i = 0; i < pieData.size(); ++i) {
+    total += pieData[i];
+  }
+
+  static float perc[4];
+  for (int i = 0; i < 4; i++)
+    perc[i] = (pieData[i] / total) * 100.0f;
+
+
   static ImVec4 my_colors[4] = {
-      ImVec4(1.0f, 0.0f, 0.0f, 1.0f),  // red
-      ImVec4(1.0f, 0.65f, 0.0f, 1.0f), // orange
-      ImVec4(1.0f, 1.0f, 0.0f, 1.0f),  // yellow
-      ImVec4(0.0f, 1.0f, 0.0f, 1.0f),  // green
+      ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
+      ImVec4(1.0f, 0.65f, 0.0f, 1.0f),
+      ImVec4(1.0f, 1.0f, 0.0f, 1.0f),
+      ImVec4(0.0f, 1.0f, 0.0f, 1.0f),
   };
 
-  static int MyCMap = ImPlot::AddColormap("MyColormap", my_colors, IM_ARRAYSIZE(my_colors));
+  static int MyCMap =
+      ImPlot::AddColormap("MyColormap", my_colors, IM_ARRAYSIZE(my_colors));
 
   ImGui::SetNextWindowPos(pos);
   ImGui::SetNextWindowSize(size);
@@ -62,7 +74,7 @@ void PieChart::draw() {
     ImPlot::SetupAxesLimits(0, 1, 0, 1);
 
     // Draw pie chart
-    ImPlot::PlotPieChart(labels1, pieData.data(), 4, 0.5, 0.5, 0.1, "%.2f", 90,
+    ImPlot::PlotPieChart(labels1, perc, 4, 0.5, 0.5, 0.1, "%.1f%%", 90,
                          flags);
 
     ImPlot::EndPlot();

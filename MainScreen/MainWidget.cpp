@@ -155,14 +155,12 @@ void MainWidget::openFile(const std::string &path) {
 
   if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
 
-    if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
+    if (ImGuiFileDialog::Instance()->IsOk()) {
       std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
       std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
       logChosenFile(filePathName);
       fileChosen(filePathName);
     }
-
-    // close
     ImGuiFileDialog::Instance()->Close();
   }
 }
@@ -173,10 +171,10 @@ void MainWidget::logChosenFile(const std::string &name) {
 
   json data;
 
-  if (fi.peek() != std::ifstream::traits_type::eof()) { // not empty
+  if (fi.peek() != std::ifstream::traits_type::eof()) {
     data = json::parse(fi);
   } else {
-    data = json::object(); // start with empty JSON object
+    data = json::object(); 
   }
 
   std::string key = "recentFiles";
@@ -186,7 +184,7 @@ void MainWidget::logChosenFile(const std::string &name) {
   if (data[key].size() < recent_files_max_count) {
     data[key].push_back(name);
   } else {
-    data[key].erase(data[key].end() - 1);
+    data[key].erase(data[key].begin());
     data[key].push_back(name);
   }
   std::ofstream fo("user_data.json");

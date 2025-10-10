@@ -52,6 +52,7 @@ qcustomplot/*
 ### jmesh and obj benchmark files ###
 *.2djmsh
 *.obj
+*.zip
 
 # screenshots
 screenshots/*
