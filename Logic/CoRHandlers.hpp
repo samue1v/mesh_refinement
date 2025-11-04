@@ -116,7 +116,6 @@ class TriangulationHandler : public AbsHandler{
   int delaunay(const std::pair<uint,uint> & edge);
   uint euclidian(Frame & frame1,const std::pair<uint,uint> & edge);
   glm::vec3 computeRightVertex(const std::pair<uint,uint> & edge);
-  //uint addNewVertex(glm::vec3 vec);
   float computeRightTriangleHeight(const std::pair<uint,uint> & edge);
   bool doIntersectOtherEdges(const std::pair<glm::vec3,glm::vec3> & e1,const std::pair<glm::vec3,glm::vec3> & e2);
   bool doIntersectOtherEdges(const std::pair<uint,uint> & baseEdge,const std::pair<glm::vec3,glm::vec3> & e1,const std::pair<glm::vec3,glm::vec3> & e2);

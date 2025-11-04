@@ -192,6 +192,7 @@ void QuadTree::init(){
 void QuadTree::draw(){
   
 //std::cout<<"Drawing...\n";
+  if(rootNode == nullptr){return;}
   f->glPointSize(4);
   f->glLineWidth(1);
     

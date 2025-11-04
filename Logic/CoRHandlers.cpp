@@ -434,9 +434,6 @@ int TriangulationHandler::delaunay(const std::pair<uint, uint> &edge) {
                                    points->at(edge.second).position,
                                    points->at(i).position)) {
         for (int j = 0; j < points->size(); j++) {
-          if (j == 98 && edge.first == 155 && edge.second == 219 && i == 101) {
-            int a = 1;
-          }
           if (i != j && j != edge.first && j != edge.second &&
               Misc::Util::crossCompare(points->at(edge.first).position,
                                        points->at(edge.second).position,
