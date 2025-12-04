@@ -205,7 +205,7 @@ GLSimpleMesh *QuadTreeHandler::handle(GLSimpleMesh *request) {
 // TRIANGULATIONHANDLER METHODS
 
 GLSimpleMesh *TriangulationHandler::handle(GLSimpleMesh *request) {
-  this->obj = dynamic_cast<GLTriMesh*>(request);
+  this->obj = dynamic_cast<GLTriMesh *>(request);
   std::vector<std::pair<uint, uint>> *lines = request->getLines();
   for (std::pair<uint, uint> l : *lines) {
     queue.push(l);
@@ -213,17 +213,17 @@ GLSimpleMesh *TriangulationHandler::handle(GLSimpleMesh *request) {
 
   // for(int i=0;i<lines->size();i++){ //made this change so it would not ...
   for (int i = 0; i < request->sourceFileLinesSize; i++) {
-    adjList.add({lines->at(i).first, lines->at(i).second});
+    adjList.set({lines->at(i).first, lines->at(i).second}, '1');
   }
 
   makeTriangulation(this->obj);
-  //for(int _ = 0;_<4;_++){
-  //  smoothTriangulation();
-  //}
+
+  // for(int _ = 0;_<4;_++){
+  //   smoothTriangulation();
+  // }
   classifyTtriangles();
   prepareFrames();
-  //debug();
-  adjList.clear();
+  // debug();
   return AbsHandler::handle(request);
 }
 
@@ -233,6 +233,18 @@ void TriangulationHandler::makeTriangulation(GLTriMesh *obj) {
   std::vector<Vertex> *points = obj->getPoints();
   std::vector<std::pair<uint, uint>> *lines = obj->getLines();
   std::vector<Triangle> *triangles = obj->getTriangles();
+
+  // Helper lamda
+  auto updateEdgeMap = [](GLTriMesh *m, const std::pair<int, int> &edge,
+                          uint triangle_idx) {
+    auto vec = m->edgeFaceMap.find(edge);
+    if (!vec) {
+      m->edgeFaceMap.set(edge, {triangle_idx});
+    } else {
+      vec->push_back(triangle_idx);
+    }
+  };
+  // Main loop
   while (!queue.empty()) {
     auto currentEdge = queue.front();
     if (isDone(currentEdge)) {
@@ -249,15 +261,28 @@ void TriangulationHandler::makeTriangulation(GLTriMesh *obj) {
     }
     std::pair<int, int> newEdge1(currentEdge.first, i);
     std::pair<int, int> newEdge2(i, currentEdge.second);
-    if (adjList.check(newEdge1) == '0') {
+    // if (obj->edgeFaceMap.check(newEdge1) == '0') {
+    if (!adjList.contains(newEdge1)) {
       lines->push_back(newEdge1);
     }
-    if (adjList.check(newEdge2) == '0') {
+    // if (obj->edgeFaceMap.check(newEdge2) == '0') {
+    if (!adjList.contains(newEdge2)) {
       lines->push_back(newEdge2);
     }
+
+    Triangle t(currentEdge.first, i, currentEdge.second,
+               points->at(currentEdge.first), points->at(i),
+               points->at(currentEdge.second));
+
     check(newEdge1);
     check(newEdge2);
     check(currentEdge);
+
+    updateEdgeMap(obj, newEdge1, triangles->size());
+    updateEdgeMap(obj, newEdge2, triangles->size());
+    updateEdgeMap(obj, currentEdge, triangles->size());
+
+    triangles->push_back(t);
 
     if (!isDone(newEdge1)) {
       queue.push(newEdge1);
@@ -265,12 +290,7 @@ void TriangulationHandler::makeTriangulation(GLTriMesh *obj) {
     if (!isDone(newEdge2)) {
       queue.push(newEdge2);
     }
-    fillNeighbours(currentEdge.first, i, currentEdge.second);
-    Triangle t(currentEdge.first, i, currentEdge.second,
-               points->at(currentEdge.first), points->at(i),
-               points->at(currentEdge.second));
-
-    triangles->push_back(t);
+    // fillNeighbours(currentEdge.first, i, currentEdge.second);
   }
 }
 
@@ -300,11 +320,11 @@ void TriangulationHandler::smoothTriangulation() {
 
     for (uint32_t j : vi.neighbours) {
       const glm::vec3 &vj = points->at(j).position;
-      //float dist2 = glm::dot(vi.position - vj, vi.position - vj);
-      //if (dist2 == 0.0f)
-      //  continue;
+      // float dist2 = glm::dot(vi.position - vj, vi.position - vj);
+      // if (dist2 == 0.0f)
+      //   continue;
 
-      float w = 1.0f;// / dist2;
+      float w = 1.0f; // / dist2;
       displacement += w * (vj - vi.position);
       weightSum += w;
     }
@@ -360,11 +380,21 @@ void TriangulationHandler::fillNeighbours(uint p0, uint p1, uint p2) {
 }
 
 void TriangulationHandler::check(const std::pair<uint, uint> &edge) {
-  adjList.add(edge);
+  // obj->edgeFaceMap.add(edge);
+  auto it = adjList.find(edge);
+  if (it == nullptr) {
+    adjList.set(edge, '1');
+  } else {
+    adjList.set(edge, *it + 1);
+  }
 }
 
 bool TriangulationHandler::isDone(const std::pair<uint, uint> &edge) {
-  return adjList.check(edge) >= '2' ? true : false;
+  if (!adjList.contains(edge)) {
+    return false;
+  }
+  auto it = adjList.find(edge);
+  return *it >= '2' ? true : false;
 }
 
 /* uint TriangulationHandler::delaunay(const std::pair<uint, uint>& edge) {
@@ -706,4 +736,111 @@ bool TriangulationHandler::doTresPass(uint idxP0, uint idxP1, glm::vec3 pRet) {
     }
   }
   return false;
+}
+
+RemeshBadRegions::RemeshBadRegions() : AbsHandler() {}
+
+GLSimpleMesh *RemeshBadRegions::handle(GLSimpleMesh *request) {
+  std::vector<Triangle> *triangles = request->getTriangles();
+  sortedIndices.resize(triangles->size());
+  std::iota(sortedIndices.begin(), sortedIndices.end(), 0);
+  std::sort(sortedIndices.begin(), sortedIndices.end(), [&](int a, int b) {
+    return triangles->at(a).score < triangles->at(b).score;
+  });
+  BFSMesh(request, sortedIndices[0]);
+
+  return targetMesh;
+}
+
+void RemeshBadRegions::BFSMesh(GLSimpleMesh *mesh, uint start_idx) {
+
+  targetMesh = new HandObject(mesh->currentScene, mesh->currentContext);
+  auto &triangles = *mesh->getTriangles();
+  std::cout << triangles.size() << "\n";
+  auto &edgeFaceMap = mesh->edgeFaceMap;
+
+  const float threshold = 0.5f;
+
+  std::queue<uint> queue;
+
+  float sumScores = 0.0f;
+  int count = 0;
+
+  queue.push(start_idx);
+  regionTriangles.insert(start_idx);
+
+  Triangle &t = triangles[start_idx];
+  sumScores += t.score;
+  count++;
+
+  while (!queue.empty()) {
+    uint tid = queue.front();
+    queue.pop();
+    Triangle &t = triangles[tid];
+    t.color = {0.f,0.f,1.f};
+    t.isActive = false;
+
+    for (int i = 0; i < 3; i++) {
+      std::pair<uint, uint> edge = {t.indexes[i], t.indexes[(i + 1) % 3]};
+
+      auto triList = edgeFaceMap.find(edge);
+      if (!triList)
+        continue;
+
+      for (uint nbrIdx : *triList) {
+        if (nbrIdx == tid) {
+          continue;
+        }
+
+        Triangle &nbr = triangles[nbrIdx];
+
+        bool nbrAlreadyAccepted = regionTriangles.count(nbrIdx);
+
+        if (nbrAlreadyAccepted) {
+          continue;
+        }
+
+        float predictedMean = (sumScores + nbr.score) / (count + 1);
+
+        if (predictedMean < threshold) {
+          queue.push(nbrIdx);
+          regionTriangles.insert(nbrIdx);
+          sumScores += nbr.score;
+          count++;
+        }
+      }
+    }
+  }
+
+  auto normEdge = [&](uint a, uint b) {
+    return std::make_pair(std::min(a, b), std::max(a, b));
+  };
+
+  for (uint t : regionTriangles) {
+    const Triangle &tri = mesh->triangles[t];
+
+    for (int e = 0; e < 3; e++) {
+      uint a = tri.indexes[e];
+      uint b = tri.indexes[(e + 1) % 3];
+      auto edge = normEdge(a, b);
+
+      const auto &faces = mesh->edgeFaceMap.find(edge);
+      if (!faces)
+        continue;
+
+      bool allInside = true;
+      bool someInside = false;
+
+      for (uint f : *faces) {
+        if (regionTriangles.count(f))
+          someInside = true;
+        else
+          allInside = false;
+      }
+
+      if (someInside && !allInside) {
+        boundaryEdges.insert(edge);
+      }
+    }
+  }
 }

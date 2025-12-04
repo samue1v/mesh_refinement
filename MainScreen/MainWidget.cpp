@@ -81,6 +81,10 @@ void MainWidget::ShowSideMenuBar() {
                            selectedPostProcessing ==
                                MenuCommands::PostProcessingApproach::Smooth))
       selectedPostProcessing = MenuCommands::PostProcessingApproach::Smooth;
+    if (ImGui::RadioButton("Local Remesh",
+                           selectedPostProcessing ==
+                               MenuCommands::PostProcessingApproach::Remesh))
+      selectedPostProcessing = MenuCommands::PostProcessingApproach::Remesh;
 
     ImGui::TreePop();
   }
@@ -148,7 +152,8 @@ void MainWidget::openFile(const std::string &path) {
     openDialog = false; // reset flag
     IGFD::FileDialogConfig config;
     config.path = path;
-    ImGui::SetNextWindowSize({static_cast<float>(glWidget->width()/2.), static_cast<float>(glWidget->height()/2.)});
+    ImGui::SetNextWindowSize({static_cast<float>(glWidget->width() / 2.),
+                              static_cast<float>(glWidget->height() / 2.)});
     ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File",
                                             ".obj", config);
   }
@@ -174,7 +179,7 @@ void MainWidget::logChosenFile(const std::string &name) {
   if (fi.peek() != std::ifstream::traits_type::eof()) {
     data = json::parse(fi);
   } else {
-    data = json::object(); 
+    data = json::object();
   }
 
   std::string key = "recentFiles";

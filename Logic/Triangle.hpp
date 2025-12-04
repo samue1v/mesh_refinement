@@ -15,7 +15,7 @@ static glm::vec3 green(0,1,0);
 struct Vertex{
   glm::vec3 position = glm::vec3();
   glm::vec3 color = glm::vec3();
-  bool isActive = false;
+  bool isActive = true;
   std::set<uint> neighbours;
 };
 
@@ -38,6 +38,7 @@ public:
 //private:
   //Vertex * vertices[3];
   std::array<Vertex*, 3> vertices;
+  bool isActive;
   int indexes[3];
   glm::vec3 color;
   float score;

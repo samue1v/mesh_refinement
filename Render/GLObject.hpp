@@ -4,6 +4,7 @@
 #include "../Logic/CoRHandlers.hpp"
 #include "../Logic/Frames.hpp"
 #include "../Logic/Triangle.hpp"
+#include "../Logic/AdjList.hpp"
 #include "GLProgram.hpp"
 #include <QDir>
 #include <QObject>
@@ -39,15 +40,16 @@ public:
   virtual void draw() = 0;
   virtual void init() = 0;
 
+public:
+  QOpenGLContext *currentContext;
+  bool visibility;
 protected:
   std::vector<GLProgram> program;
   std::string shader;
   QOpenGLFunctions_3_3_Core *f;
-  QOpenGLContext *currentContext;
   std::vector<uint> VBO;
   std::vector<uint> VAO;
   std::vector<uint> EBO;
-  bool visibility;
 };
 
 // Simple mesh interface for primitives and simple objects.
@@ -92,6 +94,7 @@ public:
   std::vector<uint32_t> indexes;
   std::vector<std::pair<uint, uint>> lines;
   std::vector<Triangle> triangles;
+  AdjList<std::vector<uint>> edgeFaceMap;
   AbsHandler *baseHandler;
 
 public:
@@ -150,6 +153,7 @@ public:
 protected:
   // triangle vector
   std::vector<Frame> frames;
+
 
   int currentFrame;
 };

@@ -29,7 +29,7 @@ qt_add_executable(mesh main.cpp
                   Logic/Triangle.cpp
                   Logic/CoRHandlers.cpp
                   Logic/FileHandler.cpp
-                  Logic/AdjList.cpp
+                  #Logic/AdjList.cpp
                   Logic/Util.cpp
                   Logic/File.cpp
                   MainScreen/MainWidget.cpp

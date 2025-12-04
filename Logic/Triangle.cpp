@@ -4,6 +4,7 @@ Triangle::Triangle(int idx0, int idx1, int idx2, Vertex &v1, Vertex &v2,
                    Vertex &v3) {
   setPoints(v1, v2, v3);
   setIndexes(idx0, idx1, idx2);
+  isActive = true;
 }
 
 glm::vec3 Triangle::getColorFromGradient(float v) {

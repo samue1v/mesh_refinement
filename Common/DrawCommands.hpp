@@ -13,6 +13,7 @@ enum class MeshingApproach {
 enum class PostProcessingApproach {
   None,
   Smooth,
+  Remesh,
 };
 
 struct CreateSceneCMD {

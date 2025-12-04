@@ -55,7 +55,8 @@ void HandObject::init() {
 
   std::vector<std::pair<glm::vec3, glm::vec3>> vertexBufferPoints;
   for (Vertex &v : points) {
-    vertexBufferPoints.push_back({v.position, {1.f, 0.f, 0.f}});
+    //if (v.isActive)
+      vertexBufferPoints.push_back({v.position, {1.f, 0.f, 0.f}});
   }
 
   f->glBindVertexArray(VAO[0]);
@@ -121,9 +122,11 @@ void HandObject::init() {
   // fill triangles
   std::vector<std::pair<glm::vec3, glm::vec3>> vertexBufferTri;
   for (Triangle &tri : triangles) {
-    vertexBufferTri.push_back({tri.vertices[0]->position, tri.color});
-    vertexBufferTri.push_back({tri.vertices[1]->position, tri.color});
-    vertexBufferTri.push_back({tri.vertices[2]->position, tri.color});
+    //if (tri.isActive) {
+      vertexBufferTri.push_back({tri.vertices[0]->position, tri.color});
+      vertexBufferTri.push_back({tri.vertices[1]->position, tri.color});
+      vertexBufferTri.push_back({tri.vertices[2]->position, tri.color});
+    //}
   }
 
   f->glBindVertexArray(VAO[2]);

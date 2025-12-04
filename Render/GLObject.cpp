@@ -216,7 +216,7 @@ void GLSimpleMesh::draw() {
 GLTriMesh::GLTriMesh(Scene *scene, QOpenGLContext *context)
     : GLSimpleMesh(context, scene) {}
 
-GLTriMesh::~GLTriMesh() {}
+GLTriMesh::~GLTriMesh() { edgeFaceMap.clear(); }
 
 void GLTriMesh::init() {}
 

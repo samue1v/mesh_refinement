@@ -11,7 +11,7 @@ Scene::Scene(MyGLWidget *glw, QOpenGLContext *context,
   for (int i = 0; i < numf; i++) {
     HandObject *h = new HandObject(this, context);
     f->parse(h, i);
-    h->setbaseHandler(buildHandler(scene_cmd.MeshApproach));
+    h->setbaseHandler(buildHandler(scene_cmd));
     h->init();
     h->setVisible(true);
     objects.push_back(h);
@@ -67,12 +67,13 @@ void Scene::setVisible(std::string s) {
   }
 }
 
-AbsHandler *Scene::buildHandler(MenuCommands::MeshingApproach typeHandler) {
+AbsHandler *Scene::buildHandler(MenuCommands::CreateSceneCMD typeHandler) {
   AbsHandler *base = new AbsHandler;
   TriangulationHandler *trHandler = new TriangulationHandler;
   NormalizationHandler *normHandler = new NormalizationHandler;
   QuadTreeHandler *treeHandler = new QuadTreeHandler;
-  if (typeHandler == MenuCommands::MeshingApproach::PCAInv) {
+  AbsHandler * last;
+  if (typeHandler.MeshApproach == MenuCommands::MeshingApproach::PCAInv) {
     PCAHandler *pcaHand = new PCAHandler;
     PCAInverseHandler *pcaHandInv = new PCAInverseHandler(pcaHand);
     base->setNext(normHandler)
@@ -80,14 +81,21 @@ AbsHandler *Scene::buildHandler(MenuCommands::MeshingApproach typeHandler) {
         ->setNext(treeHandler)
         ->setNext(trHandler)
         ->setNext(pcaHandInv);
-  } else if (typeHandler == MenuCommands::MeshingApproach::PCA) {
+    last = pcaHandInv;
+  } else if (typeHandler.MeshApproach == MenuCommands::MeshingApproach::PCA) {
     PCAHandler *pcaHand = new PCAHandler;
     base->setNext(normHandler)
         ->setNext(pcaHand)
         ->setNext(treeHandler)
         ->setNext(trHandler);
+    last = trHandler;
   } else {
     base->setNext(normHandler)->setNext(treeHandler)->setNext(trHandler);
+    last = trHandler;
+  }
+  if(typeHandler.PostApproach == MenuCommands::PostProcessingApproach::Remesh){
+    RemeshBadRegions * remeshHandler = new RemeshBadRegions;
+    last->setNext(remeshHandler);
   }
   return base;
 }
